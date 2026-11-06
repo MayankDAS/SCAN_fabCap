@@ -18,14 +18,17 @@ def flatten(payload, date, dim):
                     pass
     return rows
 
-def clarity(date):
+def clarity(date, with_device):
     tok = os.environ["CLARITY_TOKEN"].strip().strip('"\'')
     if tok.lower().startswith("bearer "):
         tok = tok[7:].strip()
     print(f"Clarity token length: {len(tok)} (JWT tokens are long, hundreds of characters)")
     h = {"Authorization": f"Bearer {tok}", "Content-Type": "application/json"}
     rows = []
-    for params, dim in (({"numOfDays": "1"}, False), ({"numOfDays": "1", "dimension1": "Device"}, True)):  # 2 of 10 daily calls
+    calls = [({"numOfDays": "1"}, False)]
+    if with_device:  # keeps total calls per day under Clarity's limit of 10
+        calls.append(({"numOfDays": "1", "dimension1": "Device"}, True))
+    for params, dim in calls:
         r = requests.get(CLARITY_URL, params=params, headers=h, timeout=60)
         if not r.ok:
             sys.exit(f"Clarity API error {r.status_code}: {r.text[:300]}")
@@ -43,20 +46,23 @@ def goatcounter(date):
             for h in r.json().get("hits", []) if h.get("event")]
 
 def main():
-    date = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).date().isoformat()  # Clarity "last 24h" is UTC
-    rows = clarity(date) + goatcounter(date)
+    now = dt.datetime.now(dt.timezone.utc)
+    date = now.date().isoformat()  # each run stores a trailing 24 hour snapshot under the run date, replaced by later runs
+    with_device = now.hour >= 20 or os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+    rows = clarity(date, with_device) + goatcounter(date)
     os.makedirs("data", exist_ok=True)
+    groups = {(r[1], r[2] == "all") for r in rows}
     kept = []
-    if os.path.exists(OUT):  # re running a day replaces that day instead of duplicating it
+    if os.path.exists(OUT):  # a re run replaces the same date and kind of rows instead of duplicating them
         with open(OUT, newline="") as f:
             kept = [r for r in csv.reader(f)][1:]
-        kept = [r for r in kept if r and r[0] != date]
+        kept = [r for r in kept if r and not (r[0] == date and (r[1], r[2] == "all") in groups)]
     with open(OUT, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(FIELDS)
         w.writerows(kept)
         w.writerows(rows)
-    print(f"{len(rows)} rows for {date}")
+    print(f"{len(rows)} rows for {date} (device breakdown: {with_device})")
 
 if __name__ == "__main__":
     sys.exit(main())
