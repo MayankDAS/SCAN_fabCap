@@ -45,12 +45,16 @@ def goatcounter(date):
 def main():
     date = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=1)).date().isoformat()  # Clarity "last 24h" is UTC
     rows = clarity(date) + goatcounter(date)
-    exists = os.path.exists(OUT)
     os.makedirs("data", exist_ok=True)
-    with open(OUT, "a", newline="") as f:
+    kept = []
+    if os.path.exists(OUT):  # re running a day replaces that day instead of duplicating it
+        with open(OUT, newline="") as f:
+            kept = [r for r in csv.reader(f)][1:]
+        kept = [r for r in kept if r and r[0] != date]
+    with open(OUT, "w", newline="") as f:
         w = csv.writer(f)
-        if not exists:
-            w.writerow(FIELDS)
+        w.writerow(FIELDS)
+        w.writerows(kept)
         w.writerows(rows)
     print(f"{len(rows)} rows for {date}")
 
