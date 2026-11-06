@@ -47,5 +47,6 @@ jobs:
       - name: Commit (encrypted artifacts only)
         run: |
           git config user.name "metrics-bot"; git config user.email "metrics-bot@users.noreply.github.com"
-          git add data/history.enc metrics.html .staticrypt.json
-          git diff --cached --quiet || { git commit -m "Update visitor metrics (encrypted)" && git push; }
+          git add metrics.html .staticrypt.json
+          [ -f data/history.enc ] && git add data/history.enc || true
+          git diff --cached --quiet || { git commit -m "Update visitor metrics (encrypted)" && git pull --rebase origin main && git push; }
