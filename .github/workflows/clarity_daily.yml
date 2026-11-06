@@ -42,7 +42,7 @@ jobs:
         run: |
           python scripts/build_page.py
           npx --yes staticrypt@3 build/metrics_plain.html -d out --short --remember 30 -c .staticrypt.json \
-            --template-title "Visitor feedback" --template-instructions "Enter the password to view the metrics."
+            --template-title "Authenticate" --template-instructions "Enter the password to view the metrics."
           cp out/metrics_plain.html metrics.html
       - name: Commit (encrypted artifacts only)
         run: |
