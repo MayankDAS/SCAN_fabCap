@@ -64,14 +64,15 @@ def main():
     except SystemExit as e:  # keep going so GoatCounter data is still saved when Clarity is rate limited
         err, rows = e, []
         print(f"Clarity skipped: {e}")
-    rows += goatcounter(date)
+    yday = (now.date() - dt.timedelta(days=1)).isoformat()  # GoatCounter has no daily call limit, so refresh yesterday too
+    rows += goatcounter(yday) + goatcounter(date)
     os.makedirs("data", exist_ok=True)
-    groups = {(r[1], r[2] == "all") for r in rows}
+    groups = {(r[0], r[1], r[2] == "all") for r in rows}
     kept = []
     if os.path.exists(OUT):  # a re run replaces the same date and kind of rows instead of duplicating them
         with open(OUT, newline="") as f:
             kept = [r for r in csv.reader(f)][1:]
-        kept = [r for r in kept if r and not (r[0] == date and (r[1], r[2] == "all") in groups)]
+        kept = [r for r in kept if r and not ((r[0], r[1], r[2] == "all") in groups)]
     with open(OUT, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(FIELDS)
