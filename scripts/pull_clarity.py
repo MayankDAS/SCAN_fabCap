@@ -42,14 +42,29 @@ def goatcounter(date):
     r = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/hits", params={"start": date, "end": date, "limit": 100},
                      headers={"Authorization": f"Bearer {tok}"}, timeout=60)
     r.raise_for_status()
-    return [[date, "goatcounter", "all", "event", h["path"].removeprefix("ev/"), float(h["count"])]
+    rows = [[date, "goatcounter", "all", "event", h["path"].removeprefix("ev/"), float(h["count"])]
             for h in r.json().get("hits", []) if h.get("event")]
+    t = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/total", params={"start": date, "end": date},
+                     headers={"Authorization": f"Bearer {tok}"}, timeout=60)
+    t.raise_for_status()
+    tj = t.json()
+    print("GoatCounter total response:", {k: tj[k] for k in tj if k.startswith("total")})
+    for field, key in (("visitors", "total"), ("events", "total_events")):
+        if isinstance(tj.get(key), (int, float)):
+            rows.append([date, "goatcounter", "all", "total", field, float(tj[key])])
+    return rows
 
 def main():
     now = dt.datetime.now(dt.timezone.utc)
     date = now.date().isoformat()  # each run stores a trailing 24 hour snapshot under the run date, replaced by later runs
     with_device = True  # 2 calls per run, 2 runs a day, well under Clarity's limit of 10 per day
-    rows = clarity(date, with_device) + goatcounter(date)
+    err = None
+    try:
+        rows = clarity(date, with_device)
+    except SystemExit as e:  # keep going so GoatCounter data is still saved when Clarity is rate limited
+        err, rows = e, []
+        print(f"Clarity skipped: {e}")
+    rows += goatcounter(date)
     os.makedirs("data", exist_ok=True)
     groups = {(r[1], r[2] == "all") for r in rows}
     kept = []
@@ -63,6 +78,8 @@ def main():
         w.writerows(kept)
         w.writerows(rows)
     print(f"{len(rows)} rows for {date} (device breakdown: {with_device})")
+    if err is not None:
+        sys.exit(err.code)
 
 if __name__ == "__main__":
     sys.exit(main())

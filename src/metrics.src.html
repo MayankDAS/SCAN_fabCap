@@ -191,6 +191,7 @@ function sampleData(){
     var score=0.4*eng+0.4*succ+0.2*fric;
     out.push({date:ds,sessions:s,eng:eng,succ:succ,fric:fric,score:score});
     evs.forEach(function(e,k){daily.push({date:ds,source:"goatcounter",dimension:"all",metric:"event",field:e,value:String(Math.round(s*(1.1-k*0.1)*(0.6+rnd()*0.6)))});});
+    daily.push({date:ds,source:"goatcounter",dimension:"all",metric:"total",field:"visitors",value:String(Math.round(s*0.9))});
     var dm=Math.round(s*0.62),mb=Math.round(s*0.3);
     [["PC",dm],["Mobile",mb],["Tablet",s-dm-mb]].forEach(function(p){daily.push({date:ds,source:"clarity",dimension:p[0],metric:"Traffic",field:"totalSessionCount",value:String(Math.max(0,p[1]))});});
   }
@@ -325,8 +326,13 @@ function render(){
     {k:"succ",l:"Task success",agg:function(r){return wavg(r,"succ");},d:0,h:"Sessions with a meaningful action"},
     {k:"fric",l:"Low friction",agg:function(r){return wavg(r,"fric");},d:0,h:"Higher means fewer rage and dead clicks"}
   ];
+  /* GoatCounter visitors: independent of Clarity so it shows even when Clarity data is missing */
+  var gd={}; state.daily.forEach(function(r){ if(r.source==="goatcounter"&&r.metric==="total"&&r.field==="visitors"){var x=num(r.value); if(x!=null) gd[r.date]=x;} });
+  var gds=Object.keys(gd).sort(), n=state.days||gds.length, gcur=gds.slice(-n), gprv=gds.slice(-2*n,-n);
+  var gsum=function(a){return a.length?a.reduce(function(m,k){return m+gd[k];},0):null;};
+  defs.splice(2,0,{k:"gc",l:"Visitors",agg:gsum,d:0,h:"GoatCounter, same as the old footer count",gc:true});
   defs.forEach(function(df){
-    var v=df.agg(rows),p=prev.length?df.agg(prev):null,t=el("div","tile");
+    var v=df.gc?df.agg(gcur):df.agg(rows),p=df.gc?(gprv.length?df.agg(gprv):null):(prev.length?df.agg(prev):null),t=el("div","tile");
     t.appendChild(el("div","lbl",df.l)); t.appendChild(el("div","val",v==null?"n/a":Math.round(v).toLocaleString("en-US")));
     var dl=el("div","dlt");
     if(v!=null&&p!=null&&p!==0){var ch=(v-p)/Math.abs(p)*100,up=ch>=0.5,dn=ch<=-0.5;
