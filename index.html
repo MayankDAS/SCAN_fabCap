@@ -444,5 +444,44 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"){pinned=false;pop.hi
 renderCaps();renderZones();renderCapInfo();
 </script>
 
+<!-- Visitor feedback tracking: Microsoft Clarity + GoatCounter events. Replace CLARITY_PROJECT_ID (Clarity > Settings > Overview). -->
+<script>
+(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","CLARITY_PROJECT_ID");
+(function(){
+  var fired={};
+  function track(name,tags,once){
+    if(once&&fired[name]) return; fired[name]=1;
+    try{ if(window.clarity) window.clarity("event",name); }catch(e){}
+    try{ if(tags) for(var k in tags) window.clarity("set",k,String(tags[k])); }catch(e){}
+    try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path:"ev/"+name,title:name,event:true}); }catch(e){}
+  }
+  function success(){ track("task_success",null,true); }
+  /* Delegated listeners, capture phase, so existing handlers stay untouched */
+  document.addEventListener("click",function(e){
+    var t=e.target; if(!t.closest) return;
+    var cap=t.closest(".cap"); if(cap){ track("capability_select",{last_capability:cap.dataset.k}); success(); return; }
+    var zone=t.closest(".zone"); if(zone){ track("zone_select",{last_zone:zone.dataset.z}); success(); return; }
+    var link=t.closest("#pop a[href]"); if(link){ track("website_link_click"); success(); return; }
+    var co=t.closest("[data-id]"); if(co&&!t.closest("#pop")){ track("company_detail_view"); success(); return; }
+    if(t.closest("#themebtn")) track("theme_toggle",null,true);
+  },true);
+  document.addEventListener("toggle",function(e){
+    if(e.target&&e.target.tagName==="DETAILS"&&e.target.open&&e.target.closest("#pop")) track("business_details_open");
+  },true);
+  /* Clicks inside the Tableau iframe are invisible to the page; a window blur with an iframe focused is the proxy */
+  window.addEventListener("blur",function(){
+    setTimeout(function(){
+      var a=document.activeElement;
+      if(a&&a.tagName==="IFRAME"&&a.closest&&a.closest("#viz1792511789497")){ track("tableau_engaged",null,true); success(); }
+    },0);
+  });
+  /* Dwell: 30 s and 120 s of visible time */
+  var vis=0; setInterval(function(){
+    if(document.visibilityState!=="visible") return; vis++;
+    if(vis===30) track("engaged_30s",null,true);
+    if(vis===120) track("engaged_120s",null,true);
+  },1000);
+})();
+</script>
 <script data-goatcounter="https://fabscan.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body></html>
