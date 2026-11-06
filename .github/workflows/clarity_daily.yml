@@ -28,13 +28,16 @@ jobs:
           if [ -f data/history.enc ]; then
             openssl enc -d -aes-256-cbc -pbkdf2 -pass env:HISTORY_KEY -in data/history.enc -out data/clarity_daily.csv
           fi
-      - run: python scripts/pull_clarity.py
+      - name: Pull Clarity and GoatCounter
+        continue-on-error: true
+        run: python scripts/pull_clarity.py
         env:
           CLARITY_TOKEN: ${{ secrets.CLARITY_TOKEN }}
           GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
-      - run: python scripts/build_metrics.py
+      - name: Build score
+        run: '[ -f data/clarity_daily.csv ] && python scripts/build_metrics.py || echo "no data yet"'
       - name: Re-encrypt history
-        run: openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:HISTORY_KEY -in data/clarity_daily.csv -out data/history.enc
+        run: '[ -f data/clarity_daily.csv ] && openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:HISTORY_KEY -in data/clarity_daily.csv -out data/history.enc || echo "no data yet"'
       - name: Build password-protected page
         run: |
           python scripts/build_page.py
