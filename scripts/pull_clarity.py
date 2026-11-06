@@ -39,15 +39,18 @@ def goatcounter(date):
     tok, site = os.environ.get("GOATCOUNTER_TOKEN"), os.environ.get("GOATCOUNTER_SITE", "fabscan")
     if not tok:
         return []
-    r = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/hits", params={"start": date, "end": date, "limit": 100},
+    r = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/hits", params={"start": f"{date}T00:00:00Z", "end": f"{date}T23:59:59Z", "limit": 100},
                      headers={"Authorization": f"Bearer {tok}"}, timeout=60)
     r.raise_for_status()
     rows = [[date, "goatcounter", "all", "event", h["path"].removeprefix("ev/"), float(h["count"])]
             for h in r.json().get("hits", []) if h.get("event")]
-    t = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/total", params={"start": date, "end": date},
+    t = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/total", params={"start": f"{date}T00:00:00Z", "end": f"{date}T23:59:59Z"},
                      headers={"Authorization": f"Bearer {tok}"}, timeout=60)
     t.raise_for_status()
     tj = t.json()
+    wk = requests.get(f"https://{site}.goatcounter.com/api/v0/stats/total", params={"start": f"{date}T00:00:00Z"[:0] + (dt.date.fromisoformat(date) - dt.timedelta(days=30)).isoformat() + "T00:00:00Z", "end": f"{date}T23:59:59Z"},
+                      headers={"Authorization": f"Bearer {tok}"}, timeout=60)
+    print("GoatCounter last 30 days (diagnostic):", {k: v for k, v in wk.json().items() if k.startswith("total")} if wk.ok else wk.status_code)
     print("GoatCounter total response:", {k: tj[k] for k in tj if k.startswith("total")})
     for field, key in (("visitors", "total"), ("events", "total_events")):
         if isinstance(tj.get(key), (int, float)):
