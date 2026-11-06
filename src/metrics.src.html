@@ -46,7 +46,7 @@ h1{font-size:20px;margin:0;font-weight:600}
 .btn:hover{background:var(--wash)}
 .btn[aria-pressed="true"]{color:var(--ink);font-weight:600}
 .banner{border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:10px 14px;color:var(--ink2);font-size:13px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
 .tile,.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
 .tile .lbl{color:var(--ink2);font-size:12.5px}
 .tile .val{font-size:28px;font-weight:600;line-height:1.15;margin-top:4px}
@@ -56,6 +56,9 @@ h1{font-size:20px;margin:0;font-weight:600}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}}
 .card h2{font-size:14px;margin:0;font-weight:600}
+.eqn{margin-top:12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg,transparent)}
+.eqn .eq{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+.eqn-sub{font-size:12px;color:var(--muted);margin-top:4px}
 .card .cs{font-size:12.5px;color:var(--ink2);margin:2px 0 10px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-bottom:6px}
 .legend i{display:inline-block;width:14px;height:0;border-top:2px solid;vertical-align:middle;margin-right:6px;border-radius:2px}
@@ -114,6 +117,10 @@ td{font-variant-numeric:tabular-nums}
     <h2>Feedback score</h2>
     <div class="cs">Daily score from 0 to 100. It blends engagement, task success and low friction.</div>
     <div class="chart" id="c_score"></div>
+    <div class="eqn" role="note">
+      <div class="eq"><b>Score</b> = 0.4 × Engagement + 0.4 × Task success + 0.2 × Low friction</div>
+      <div class="eqn-sub">Weights sum to 1, so the score stays on a 0 to 100 scale. One more point of engagement or task success adds 0.4 to the score; one more point of low friction adds 0.2. If a component has no data for a day, the other weights are rescaled.</div>
+    </div>
   </div>
 
   <div class="card">
