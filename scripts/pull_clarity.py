@@ -19,12 +19,16 @@ def flatten(payload, date, dim):
     return rows
 
 def clarity(date):
-    tok = os.environ["CLARITY_TOKEN"]
+    tok = os.environ["CLARITY_TOKEN"].strip().strip('"\'')
+    if tok.lower().startswith("bearer "):
+        tok = tok[7:].strip()
+    print(f"Clarity token length: {len(tok)} (JWT tokens are long, hundreds of characters)")
     h = {"Authorization": f"Bearer {tok}", "Content-Type": "application/json"}
     rows = []
     for params, dim in (({"numOfDays": "1"}, False), ({"numOfDays": "1", "dimension1": "Device"}, True)):  # 2 of 10 daily calls
         r = requests.get(CLARITY_URL, params=params, headers=h, timeout=60)
-        r.raise_for_status()
+        if not r.ok:
+            sys.exit(f"Clarity API error {r.status_code}: {r.text[:300]}")
         rows += flatten(r.json(), date, dim)
     return rows
 
