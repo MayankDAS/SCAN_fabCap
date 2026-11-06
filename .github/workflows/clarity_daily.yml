@@ -1,23 +1,48 @@
 name: Daily visitor metrics
 on:
   schedule:
-    - cron: "17 6 * * *"   # 06:17 UTC daily; Clarity keeps only the last 1 to 3 days
+    - cron: "0 11,19 * * *"   # 11:00 and 19:00 UTC = 6:00 AM and 2:00 PM EST (7:00 AM and 3:00 PM during daylight saving)
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
   pull:
     runs-on: ubuntu-latest
+    env:
+      HISTORY_KEY: ${{ secrets.HISTORY_KEY }}
+      STATICRYPT_PASSWORD: ${{ secrets.METRICS_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
       - run: pip install requests
+      - name: Check secrets
+        run: |
+          [ -n "$HISTORY_KEY" ] || { echo "Missing secret HISTORY_KEY"; exit 1; }
+          [ -n "$STATICRYPT_PASSWORD" ] || { echo "Missing secret METRICS_PASSWORD"; exit 1; }
+      - name: Decrypt history
+        run: |
+          mkdir -p data
+          if [ -f data/history.enc ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -pass env:HISTORY_KEY -in data/history.enc -out data/clarity_daily.csv
+          fi
       - run: python scripts/pull_clarity.py
         env:
           CLARITY_TOKEN: ${{ secrets.CLARITY_TOKEN }}
           GOATCOUNTER_TOKEN: ${{ secrets.GOATCOUNTER_TOKEN }}
       - run: python scripts/build_metrics.py
-      - run: |
+      - name: Re-encrypt history
+        run: openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:HISTORY_KEY -in data/clarity_daily.csv -out data/history.enc
+      - name: Build password-protected page
+        run: |
+          python scripts/build_page.py
+          npx --yes staticrypt@3 build/metrics_plain.html -d out --short --remember 30 -c .staticrypt.json \
+            --template-title "Visitor feedback" --template-instructions "Enter the password to view the metrics."
+          cp out/metrics_plain.html metrics.html
+      - name: Commit (encrypted artifacts only)
+        run: |
           git config user.name "metrics-bot"; git config user.email "metrics-bot@users.noreply.github.com"
-          git add data && (git diff --cached --quiet || git commit -m "Daily visitor metrics" && git push)
+          git add data/history.enc metrics.html .staticrypt.json
+          git diff --cached --quiet || { git commit -m "Update visitor metrics (encrypted)" && git push; }

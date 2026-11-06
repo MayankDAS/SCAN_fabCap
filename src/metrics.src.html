@@ -170,6 +170,10 @@ function parseCSV(t){
 function num(v){return v===""||v==null||isNaN(+v)?null:+v;}
 function fetchText(u){return fetch(u,{cache:"no-store"}).then(function(r){if(!r.ok) throw new Error(r.status);return r.text();});}
 function load(){
+  if(typeof window.__SCORE_CSV__==="string"){  /* data is embedded at build time, so no public CSV files are needed */
+    state.score=parseCSV(window.__SCORE_CSV__).map(function(o){return {date:o.date,sessions:num(o.sessions)||0,eng:num(o.engagement),succ:num(o.task_success),fric:num(o.friction_score),score:num(o.feedback_score)};});
+    state.daily=parseCSV(window.__DAILY_CSV__||""); state.sample=false; render(); return;
+  }
   Promise.all([fetchText(SCORE_URL),fetchText(DAILY_URL).catch(function(){return "";})]).then(function(r){
     state.score=parseCSV(r[0]).map(function(o){return {date:o.date,sessions:num(o.sessions)||0,eng:num(o.engagement),succ:num(o.task_success),fric:num(o.friction_score),score:num(o.feedback_score)};});
     state.daily=parseCSV(r[1]);
