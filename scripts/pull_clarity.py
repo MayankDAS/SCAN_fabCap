@@ -48,7 +48,7 @@ def goatcounter(date):
 def main():
     now = dt.datetime.now(dt.timezone.utc)
     date = now.date().isoformat()  # each run stores a trailing 24 hour snapshot under the run date, replaced by later runs
-    with_device = now.hour >= 20 or os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+    with_device = True  # 2 calls per run, 2 runs a day, well under Clarity's limit of 10 per day
     rows = clarity(date, with_device) + goatcounter(date)
     os.makedirs("data", exist_ok=True)
     groups = {(r[1], r[2] == "all") for r in rows}

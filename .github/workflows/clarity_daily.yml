@@ -1,7 +1,7 @@
 name: Daily visitor metrics
 on:
   schedule:
-    - cron: "17 */4 * * *"   # every 4 hours at :17 UTC; Clarity keeps only the last 1 to 3 days
+    - cron: "0 11,19 * * *"   # 11:00 and 19:00 UTC = 6:00 AM and 2:00 PM EST (7:00 AM and 3:00 PM during daylight saving)
   workflow_dispatch:
 permissions:
   contents: write
