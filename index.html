@@ -6,8 +6,8 @@
 :root{
   --bg:#eef4fb; --bg2:#e2ecf8; --panel:#ffffff; --ink:#0b1e3a; --ink2:#3d5475; --muted:#6f86a6; --line:#d8e4f2; --soft:#edf3fb;
   --accent:#1f6feb; --accent2:#19a7ce; --accent-soft:#e2edfd;
-  --t1:#0b3d91; --t2:#1f78d1; --t3:#17a2c8;
-  --t1s:#dbe5f6; --t2s:#ddeefc; --t3s:#d9f3fa;
+  --t1:#0b3d91; --t2:#1f78d1; --t3:#17a2c8; --t4:#0f8a6a; --t0:#6b7280;
+  --t1s:#dbe5f6; --t2s:#ddeefc; --t3s:#d9f3fa; --t4s:#d7f2e9; --t0s:#e5e7eb;
   --fab:#4b5563; --i90:#d62828; --road:#5f7fb0; --road2:#a9bcd8; --land:#dde8f5; --water:#f5f9fe; --border:#bfd0e6;
   --hero1:#0a2a66; --hero2:#1553b8; --hero3:#1aa5d6;
   --shadow:0 1px 2px rgba(11,30,58,.05),0 10px 30px -12px rgba(21,83,184,.22);
@@ -18,16 +18,16 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#06101f; --bg2:#0a1830; --panel:#0c1a2f; --ink:#e8f1fc; --ink2:#a9bfdc; --muted:#7690b3; --line:#1b2f4d; --soft:#11233d;
   --accent:#5aa2ff; --accent2:#3fd0f0; --accent-soft:#12305a;
-  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef;
-  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c;
+  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t0:#9aa3af;
+  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t0s:#2a2f38;
   --fab:#9aa3af; --i90:#ff5a5a; --road:#8fb0e0; --road2:#34507a; --land:#15284a; --water:#0a1528; --border:#2a4468;
   --hero1:#081d4a; --hero2:#0f3f93; --hero3:#1283b0;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 36px -14px rgba(0,0,0,.7); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#06101f; --bg2:#0a1830; --panel:#0c1a2f; --ink:#e8f1fc; --ink2:#a9bfdc; --muted:#7690b3; --line:#1b2f4d; --soft:#11233d;
   --accent:#5aa2ff; --accent2:#3fd0f0; --accent-soft:#12305a;
-  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef;
-  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c;
+  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t0:#9aa3af;
+  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t0s:#2a2f38;
   --fab:#9aa3af; --i90:#ff5a5a; --road:#8fb0e0; --road2:#34507a; --land:#15284a; --water:#0a1528; --border:#2a4468;
   --hero1:#081d4a; --hero2:#0f3f93; --hero3:#1283b0;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 36px -14px rgba(0,0,0,.7); color-scheme:dark}
@@ -124,7 +124,7 @@ select{font:14px var(--body);color:var(--ink);background:var(--soft);border:1px 
 .co{display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink);text-decoration:none;padding:3px 0;border-bottom:1px solid transparent;font-size:14px;transition:color .15s}
 .co:hover,.co:focus-visible{color:var(--accent);border-bottom-color:var(--accent);outline:none}
 .dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 0%,transparent)}
-.d1{background:var(--t1)} .d2{background:var(--t2)} .d3{background:var(--t3)}
+.d0{background:var(--t0)} .d1{background:var(--t1)} .d2{background:var(--t2)} .d3{background:var(--t3)} .d4{background:var(--t4)}
 .co.dim{opacity:.3}
 
 /* Tiers: proportional circles with blue gradients */
@@ -285,7 +285,7 @@ tableau-viz{display:block;width:100%}
       </div>
     </div>
   </section>
-  <footer>Fab cutaway: base design by CannonDesign with modifications by Gurkiran Kaur, MS. Starter dataset of 48 real companies compiled from public sources (Sep 2026); verify before outreach. Hover or click a supplier name for its profile.</footer>
+  <footer>Fab cutaway: base design by CannonDesign with modifications by Gurkiran Kaur, MS. <span id="datanote">Loading supplier data…</span> Hover or click a supplier name for its profile.</footer>
 </div>
 <div class="pop" id="pop" hidden></div>
 <button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark theme">
@@ -303,7 +303,43 @@ tableau-viz{display:block;width:100%}
   apply(saved||root.getAttribute("data-theme")||sys);
   btn.addEventListener("click",()=>{const m=root.getAttribute("data-theme")==="dark"?"light":"dark";apply(m);try{localStorage.setItem("scan-theme",m);}catch(e){}});
 })();
-const CO = [{"n": "Applied Materials", "t": 1, "s": "Semiconductor Equipment", "c": ["dep", "litho", "mat"], "a": "3050 Bowers Ave, Santa Clara, CA 95054, USA", "la": 37.379, "lo": -121.978, "w": "appliedmaterials.com", "naics": "333242", "rev": "≈ $28B (FY2025)", "own": "Public (NASDAQ: AMAT)", "vp": "Broadest deposition and etch portfolio (CVD, PVD, ALD, epi, CMP); materials engineering at the atomic scale."}, {"n": "Lam Research", "t": 1, "s": "Semiconductor Equipment", "c": ["dep", "litho"], "a": "4650 Cushing Pkwy, Fremont, CA 94538, USA", "la": 37.492, "lo": -121.944, "w": "lamresearch.com", "naics": "333242", "rev": "≈ $18B (FY2025)", "own": "Public (NASDAQ: LRCX)", "vp": "Leader in conductor and dielectric etch plus ALD and electrochemical deposition for 3D NAND and advanced logic."}, {"n": "Tokyo Electron (TEL)", "t": 1, "s": "Semiconductor Equipment", "c": ["dep", "litho"], "a": "Akasaka Biz Tower, 5-3-1 Akasaka, Minato-ku, Tokyo, Japan", "la": 35.673, "lo": 139.736, "w": "tel.com", "naics": "333242", "rev": "≈ ¥2.4T (FY2025)", "own": "Public (TSE: 8035)", "vp": "Near monopoly in EUV coater/developer tracks; strong in thermal processing, etch and cleaning. US R&D presence in Albany, NY."}, {"n": "KLA", "t": 1, "s": "Semiconductor Equipment", "c": ["litho", "opt"], "a": "One Technology Dr, Milpitas, CA 95035, USA", "la": 37.431, "lo": -121.919, "w": "kla.com", "naics": "334516", "rev": "≈ $12B (FY2025)", "own": "Public (NASDAQ: KLAC)", "vp": "Process control leader: wafer and reticle inspection, metrology and yield analytics."}, {"n": "ASML", "t": 1, "s": "Semiconductor Equipment", "c": ["litho", "opt"], "a": "De Run 6501, 5504 DR Veldhoven, Netherlands", "la": 51.407, "lo": 5.415, "w": "asml.com", "naics": "333242", "rev": "≈ €28B (FY2024)", "own": "Public (NASDAQ: ASML)", "vp": "Sole supplier of EUV lithography scanners; also DUV immersion and computational lithography."}, {"n": "Entegris", "t": 1, "s": "Specialty Chemicals & Gases", "c": ["chem", "upw", "mat"], "a": "129 Concord Rd, Billerica, MA 01821, USA", "la": 42.558, "lo": -71.269, "w": "entegris.com", "naics": "325998", "rev": "≈ $3.2B (FY2024)", "own": "Public (NASDAQ: ENTG)", "vp": "Contamination control: liquid and gas filtration, CMP slurries and pads, specialty chemicals and wafer carriers."}, {"n": "Linde (Tonawanda Technology Center)", "t": 1, "s": "Specialty Chemicals & Gases", "c": ["chem", "gas"], "a": "175 East Park Dr, Tonawanda, NY 14150, USA", "la": 42.99, "lo": -78.872, "w": "linde.com", "naics": "325120", "rev": "≈ $33B (FY2024, group)", "own": "Public (NYSE: LIN)", "vp": "On site bulk gas plants (N2, O2, Ar, H2) and electronic specialty gases; major R&D center in Western NY."}, {"n": "Air Products", "t": 1, "s": "Specialty Chemicals & Gases", "c": ["chem", "gas"], "a": "1940 Air Products Blvd, Allentown, PA 18106, USA", "la": 40.596, "lo": -75.556, "w": "airproducts.com", "naics": "325120", "rev": "≈ $12B (FY2024)", "own": "Public (NYSE: APD)", "vp": "Industrial and electronic gases with on site supply models for large fabs."}, {"n": "Daifuku", "t": 1, "s": "Automation & Material Handling", "c": ["amhs"], "a": "3-2-11 Mitejima, Nishiyodogawa-ku, Osaka, Japan", "la": 34.695, "lo": 135.458, "w": "daifuku.com", "naics": "333922", "rev": "≈ ¥650B (FY2024)", "own": "Public (TSE: 6383)", "vp": "Overhead hoist transport (OHT), stockers and cleanroom AMHS for 300mm fabs."}, {"n": "Exyte", "t": 1, "s": "Cleanroom & HVAC", "c": ["hepa", "iot", "gas"], "a": "Löwentorstraße 68, 70376 Stuttgart, Germany", "la": 48.804, "lo": 9.197, "w": "exyte.net", "naics": "236210", "rev": "≈ €7B (FY2023)", "own": "Private", "vp": "Design and build of cleanroom fabs, including HVAC, process utilities and hook up."}, {"n": "MKS Instruments", "t": 2, "s": "Sensors & Instrumentation", "c": ["sens", "rf", "vac", "gas"], "a": "2 Tech Dr, Andover, MA 01810, USA", "la": 42.662, "lo": -71.144, "w": "mks.com", "naics": "334513", "rev": "≈ $3.6B (FY2024)", "own": "Public (NASDAQ: MKSI)", "vp": "Capacitance manometers, mass flow controllers, RF generators and vacuum measurement sold into tool OEMs."}, {"n": "Advanced Energy", "t": 2, "s": "Electronics & Interconnect", "c": ["rf", "elec"], "a": "1595 Wynkoop St, Denver, CO 80202, USA", "la": 39.753, "lo": -105.001, "w": "advancedenergy.com", "naics": "335999", "rev": "≈ $1.5B (FY2024)", "own": "Public (NASDAQ: AEIS)", "vp": "Precision RF and DC plasma power for etch and deposition chambers."}, {"n": "Ichor Systems", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["gas", "cnc"], "a": "3185 Laurelview Ct, Fremont, CA 94538, USA", "la": 37.498, "lo": -121.96, "w": "ichorsystems.com", "naics": "333242", "rev": "≈ $0.85B (FY2024)", "own": "Public (NASDAQ: ICHR)", "vp": "Gas and liquid delivery subsystems plus machined and welded components for etch and deposition OEMs."}, {"n": "Ultra Clean Holdings (UCT)", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["gas", "cnc"], "a": "26462 Corporate Ave, Hayward, CA 94545, USA", "la": 37.631, "lo": -122.101, "w": "uct.com", "naics": "333242", "rev": "≈ $2.1B (FY2024)", "own": "Public (NASDAQ: UCTT)", "vp": "Critical subsystems, gas panels, precision machining and parts cleaning services."}, {"n": "Edwards Vacuum", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["vac"], "a": "6416 Inducon Dr W, Sanborn, NY 14132, USA", "la": 43.14, "lo": -78.883, "w": "edwardsvacuum.com", "naics": "333912", "rev": "Part of Atlas Copco (not separately disclosed)", "own": "Subsidiary (Atlas Copco)", "vp": "Dry vacuum pumps and exhaust abatement; building a dry pump plant at the STAMP site in Genesee County, NY."}, {"n": "Pfeiffer Vacuum", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["vac", "sens"], "a": "Berliner Str. 43, 35614 Asslar, Germany", "la": 50.59, "lo": 8.462, "w": "pfeiffer-vacuum.com", "naics": "333912", "rev": "≈ €0.9B (FY2023)", "own": "Subsidiary (Busch Group)", "vp": "Turbomolecular pumps, leak detection and vacuum gauges."}, {"n": "Brooks Automation", "t": 2, "s": "Automation & Material Handling", "c": ["amhs"], "a": "15 Elizabeth Dr, Chelmsford, MA 01824, USA", "la": 42.599, "lo": -71.367, "w": "brooks.com", "naics": "333242", "rev": "Private (not disclosed)", "own": "Private", "vp": "Vacuum and atmospheric wafer handling robots and equipment front end modules."}, {"n": "Swagelok", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["gas", "pump"], "a": "29500 Solon Rd, Solon, OH 44139, USA", "la": 41.389, "lo": -81.441, "w": "swagelok.com", "naics": "332919", "rev": "Private (not disclosed)", "own": "Private", "vp": "Ultra high purity fittings, valves and weld systems for gas lines."}, {"n": "Parker Hannifin", "t": 2, "s": "Vacuum & Fluid Systems", "c": ["gas", "pump", "hepa"], "a": "6035 Parkland Blvd, Cleveland, OH 44124, USA", "la": 41.522, "lo": -81.462, "w": "parker.com", "naics": "333996", "rev": "≈ $20B (FY2025)", "own": "Public (NYSE: PH)", "vp": "Fluid connectors, UHP regulators, filtration and motion control."}, {"n": "AAF International", "t": 2, "s": "Cleanroom & HVAC", "c": ["hepa"], "a": "9920 Corporate Campus Dr, Louisville, KY 40223, USA", "la": 38.25, "lo": -85.594, "w": "aafintl.com", "naics": "333413", "rev": "Private (not disclosed)", "own": "Subsidiary (Daikin)", "vp": "HEPA/ULPA filters, fan filter units and molecular contamination control."}, {"n": "Xylem (Goulds Water Technology)", "t": 2, "s": "Water Treatment", "c": ["upw", "pump"], "a": "240 Fall St, Seneca Falls, NY 13148, USA", "la": 42.911, "lo": -76.797, "w": "xylem.com", "naics": "333914", "rev": "≈ $8.6B (FY2024, group)", "own": "Public (NYSE: XYL)", "vp": "Ultrapure water treatment and industrial pumps; long running Central NY manufacturing base."}, {"n": "Coherent", "t": 2, "s": "Optics & Photonics", "c": ["opt", "mat"], "a": "375 Saxonburg Blvd, Saxonburg, PA 16056, USA", "la": 40.753, "lo": -79.81, "w": "coherent.com", "naics": "333314", "rev": "≈ $5.8B (FY2025)", "own": "Public (NYSE: COHR)", "vp": "Industrial lasers, precision optics and SiC substrates."}, {"n": "Pall Corporation", "t": 2, "s": "Water Treatment", "c": ["upw", "hepa", "chem"], "a": "25 Harbor Park Dr, Port Washington, NY 11050, USA", "la": 40.826, "lo": -73.692, "w": "pall.com", "naics": "333413", "rev": "Part of Danaher (not separately disclosed)", "own": "Subsidiary (Danaher)", "vp": "Point of use filters for chemicals, gases and ultrapure water."}, {"n": "Corning", "t": 2, "s": "Advanced Materials", "c": ["mat", "opt"], "a": "One Riverfront Plaza, Corning, NY 14831, USA", "la": 42.143, "lo": -77.054, "w": "corning.com", "naics": "327212", "rev": "≈ $13B (FY2024)", "own": "Public (NYSE: GLW)", "vp": "High purity fused silica and ultra low expansion glass for EUV optics and photomask blanks."}, {"n": "Moog", "t": 2, "s": "Automation & Material Handling", "c": ["vib", "amhs"], "a": "400 Jamison Rd, Elma, NY 14059, USA", "la": 42.797, "lo": -78.628, "w": "moog.com", "naics": "336413", "rev": "≈ $3.6B (FY2024)", "own": "Public (NYSE: MOG.A)", "vp": "Precision motion control, servo actuators and slip rings; Western NY headquarters."}, {"n": "Emerson", "t": 2, "s": "Sensors & Instrumentation", "c": ["sens", "iot", "gas"], "a": "8027 Forsyth Blvd, St. Louis, MO 63105, USA", "la": 38.667, "lo": -90.33, "w": "emerson.com", "naics": "334513", "rev": "≈ $17B (FY2024)", "own": "Public (NYSE: EMR)", "vp": "Process pressure, flow and level instrumentation plus plant automation software."}, {"n": "Honeywell (Buffalo Research Laboratory)", "t": 2, "s": "Specialty Chemicals & Gases", "c": ["chem"], "a": "20 Peabody St, Buffalo, NY 14210, USA", "la": 42.861, "lo": -78.842, "w": "honeywell.com", "naics": "325180", "rev": "Part of Honeywell (not separately disclosed)", "own": "Subsidiary (Honeywell)", "vp": "Fluorine chemistry R&D; Honeywell supplies high purity electronic chemicals and sputtering targets."}, {"n": "Kulite Semiconductor Products", "t": 2, "s": "Sensors & Instrumentation", "c": ["sens"], "a": "1 Willow Tree Rd, Leonia, NJ 07605, USA", "la": 40.862, "lo": -73.988, "w": "kulite.com", "naics": "334513", "rev": "Private (not disclosed)", "own": "Private", "vp": "Piezoresistive silicon pressure transducers for harsh and high accuracy environments."}, {"n": "Taylor Devices", "t": 3, "s": "Precision Machining", "c": ["vib", "cnc"], "a": "90 Taylor Dr, North Tonawanda, NY 14120, USA", "la": 43.048, "lo": -78.874, "w": "taylordevices.com", "naics": "332999", "rev": "≈ $45M (FY2025)", "own": "Public (NASDAQ: TAYD)", "vp": "Seismic dampers, fluid viscous dampers and vibration isolation for structures and sensitive equipment."}, {"n": "Graham Corporation", "t": 3, "s": "Vacuum & Fluid Systems", "c": ["vac", "cnc"], "a": "20 Florence Ave, Batavia, NY 14020, USA", "la": 42.998, "lo": -78.188, "w": "grahamcorp.com", "naics": "332410", "rev": "≈ $210M (FY2025)", "own": "Public (NYSE: GHM)", "vp": "Vacuum ejector systems, heat exchangers and precision fabricated pressure vessels."}, {"n": "Servotronics", "t": 3, "s": "Precision Machining", "c": ["cnc", "gas"], "a": "1110 Maple Rd, Elma, NY 14059, USA", "la": 42.83, "lo": -78.65, "w": "servotronics.com", "naics": "332911", "rev": "≈ $45M (FY2024)", "own": "Public (NYSE American: SVT)", "vp": "Servo control valves and precision machined components."}, {"n": "Allient (formerly Allied Motion)", "t": 3, "s": "Automation & Material Handling", "c": ["amhs", "vib"], "a": "495 Commerce Dr, Amherst, NY 14228, USA", "la": 43.018, "lo": -78.8, "w": "allient.com", "naics": "335312", "rev": "≈ $530M (FY2024)", "own": "Public (NASDAQ: ALNT)", "vp": "Precision motors, drives and motion subsystems for robotics and automation."}, {"n": "PCB Piezotronics", "t": 3, "s": "Sensors & Instrumentation", "c": ["sens", "iot", "vib"], "a": "3425 Walden Ave, Depew, NY 14043, USA", "la": 42.915, "lo": -78.69, "w": "pcb.com", "naics": "334519", "rev": "Part of Amphenol (not separately disclosed)", "own": "Subsidiary (Amphenol)", "vp": "Accelerometers, pressure and force sensors used for vibration monitoring and tool health."}, {"n": "Buffalo Pumps", "t": 3, "s": "Vacuum & Fluid Systems", "c": ["pump"], "a": "874 Oliver St, North Tonawanda, NY 14120, USA", "la": 43.046, "lo": -78.862, "w": "buffalopumps.com", "naics": "333914", "rev": "Part of Ampco-Pittsburgh (not separately disclosed)", "own": "Subsidiary (Ampco-Pittsburgh)", "vp": "Centrifugal pumps for industrial fluid and cooling water distribution."}, {"n": "Ferroglobe (Niagara Falls plant)", "t": 3, "s": "Advanced Materials", "c": ["mat"], "a": "3807 Highland Ave, Niagara Falls, NY 14305, USA", "la": 43.113, "lo": -79.037, "w": "ferroglobe.com", "naics": "331110", "rev": "≈ $1.6B (FY2024, group)", "own": "Public (NASDAQ: GSM)", "vp": "Silicon metal, the upstream feedstock for polysilicon and silicon wafers."}, {"n": "Olin (Niagara Falls)", "t": 3, "s": "Specialty Chemicals & Gases", "c": ["chem"], "a": "2400 Buffalo Ave, Niagara Falls, NY 14303, USA", "la": 43.08, "lo": -79.005, "w": "olin.com", "naics": "325180", "rev": "≈ $6.5B (FY2024, group)", "own": "Public (NYSE: OLN)", "vp": "Chlor alkali products (caustic, hydrochloric acid) used in wastewater neutralization and cleaning."}, {"n": "Alkegen (formerly Unifrax)", "t": 3, "s": "Advanced Materials", "c": ["mat", "hepa"], "a": "600 Riverwalk Pkwy, Tonawanda, NY 14150, USA", "la": 42.978, "lo": -78.905, "w": "alkegen.com", "naics": "327993", "rev": "Private (not disclosed)", "own": "Private", "vp": "High temperature insulation and specialty fiber filtration media."}, {"n": "Optimax Systems", "t": 3, "s": "Optics & Photonics", "c": ["opt", "cnc"], "a": "6367 Dean Pkwy, Ontario, NY 14519, USA", "la": 43.232, "lo": -77.29, "w": "optimaxsi.com", "naics": "333314", "rev": "Private (not disclosed)", "own": "Private (employee owned)", "vp": "Fast turn precision optics and aspheres; Rochester photonics cluster."}, {"n": "Sydor Optics", "t": 3, "s": "Optics & Photonics", "c": ["opt"], "a": "31 Jetview Dr, Rochester, NY 14624, USA", "la": 43.125, "lo": -77.67, "w": "sydor.com", "naics": "333314", "rev": "Private (not disclosed)", "own": "Private", "vp": "Precision flats, windows and wafers in glass and crystalline materials."}, {"n": "Harbec", "t": 3, "s": "Precision Machining", "c": ["cnc"], "a": "369 Route 104, Ontario, NY 14519, USA", "la": 43.225, "lo": -77.3, "w": "harbec.com", "naics": "326199", "rev": "Private (not disclosed)", "own": "Private", "vp": "Precision CNC machining, injection molding and additive manufacturing."}, {"n": "Gleason Corporation", "t": 3, "s": "Precision Machining", "c": ["cnc"], "a": "1000 University Ave, Rochester, NY 14607, USA", "la": 43.156, "lo": -77.585, "w": "gleason.com", "naics": "333517", "rev": "Private (not disclosed)", "own": "Private", "vp": "Precision gear production machines, tooling and metrology."}, {"n": "Gorbel", "t": 3, "s": "Automation & Material Handling", "c": ["amhs"], "a": "600 Fishers Run, Fishers, NY 14453, USA", "la": 43.013, "lo": -77.46, "w": "gorbel.com", "naics": "333923", "rev": "Private (not disclosed)", "own": "Private (employee owned)", "vp": "Workstation cranes and intelligent lift assists for heavy tool installs and maintenance."}, {"n": "Barton Tool", "t": 3, "s": "Precision Machining", "c": ["cnc"], "a": "1864 Lyndon Blvd, Falconer, NY 14733, USA", "la": 42.119, "lo": -79.2, "w": "bartontool.com", "naics": "332710", "rev": "Private (not disclosed)", "own": "Private", "vp": "CNC machining, wire and RAM EDM, progressive dies and in house CAD/CAM."}, {"n": "Amphenol Aerospace", "t": 3, "s": "Electronics & Interconnect", "c": ["elec"], "a": "40-60 Delaware Ave, Sidney, NY 13838, USA", "la": 42.315, "lo": -75.393, "w": "amphenol-aerospace.com", "naics": "334417", "rev": "Part of Amphenol (not separately disclosed)", "own": "Subsidiary (Amphenol)", "vp": "Harsh environment connectors and cable assemblies."}, {"n": "Universal Instruments", "t": 3, "s": "Electronics & Interconnect", "c": ["elec", "amhs"], "a": "33 Broome Corporate Pkwy, Conklin, NY 13748, USA", "la": 42.05, "lo": -75.83, "w": "uic.com", "naics": "333249", "rev": "Private (not disclosed)", "own": "Private", "vp": "Electronics assembly and advanced packaging automation equipment."}, {"n": "Eastman Kodak (Advanced Materials & Chemicals)", "t": 3, "s": "Specialty Chemicals & Gases", "c": ["chem", "mat"], "a": "343 State St, Rochester, NY 14650, USA", "la": 43.158, "lo": -77.614, "w": "kodak.com", "naics": "325992", "rev": "≈ $1.0B (FY2024)", "own": "Public (NYSE: KODK)", "vp": "Coating, thin film and specialty chemical manufacturing at Eastman Business Park."}, {"n": "Ultralife", "t": 3, "s": "Energy Storage & EV", "c": ["batt"], "a": "2000 Technology Pkwy, Newark, NY 14513, USA", "la": 43.041, "lo": -77.09, "w": "ultralifecorporation.com", "naics": "335910", "rev": "≈ $165M (FY2024)", "own": "Public (NASDAQ: ULBI)", "vp": "Lithium batteries and power systems for backup and critical equipment."}, {"n": "Plug Power", "t": 3, "s": "Energy Storage & EV", "c": ["batt", "gas"], "a": "968 Albany Shaker Rd, Latham, NY 12110, USA", "la": 42.745, "lo": -73.78, "w": "plugpower.com", "naics": "335999", "rev": "≈ $0.63B (FY2024)", "own": "Public (NASDAQ: PLUG)", "vp": "Hydrogen fuel cells, electrolyzers and green hydrogen supply."}].map((d,i)=>({...d,id:i}));
+/* ---------------------------------------------------------------------------
+   Supplier data.
+
+   This page holds no supplier records of its own. They are fetched at run time
+   from data/suppliers.json, which scripts/build_dashboard_data.py generates from the master
+   Excel workbook in the same run that produces the Tableau workbooks. That is
+   what keeps this page and the Tableau viz on one source.
+
+   To change the data, edit the master workbook and rerun the build. Do not
+   edit anything below by hand.
+--------------------------------------------------------------------------- */
+const DATA_URL = "data/suppliers.json";
+let CO = [], META = {}, FACETS = {};
+
+/* Published field names mapped to the short names the render code uses. */
+function adapt(r, i){
+  return {
+    id: i,
+    n:  r.supplier_name || "Unnamed supplier",
+    t:  Number.isInteger(r.tier) ? r.tier : 0,
+    tl: r.tier_label || "Unclassified",
+    s:  r.industry_sector || "Sector not recorded",
+    c:  Array.isArray(r.capability_keys) ? r.capability_keys : [],
+    a:  [r.address, r.city, r.state, r.zip_code].filter(Boolean).join(", "),
+    la: (typeof r.latitude  === "number") ? r.latitude  : null,
+    lo: (typeof r.longitude === "number") ? r.longitude : null,
+    w:    r.website_display || "",
+    href: r.website || "",
+    type: r.supplier_type || "",
+    city: r.city || "", county: r.county || "", st: r.state || "",
+    prim: Array.isArray(r.primary_capability_list)   ? r.primary_capability_list   : [],
+    sec:  Array.isArray(r.secondary_capability_list) ? r.secondary_capability_list : [],
+    contact:   r.contact_name || "",
+    maps:      r.google_maps_url || "",
+    statement: r.capability_statement_url || ""
+  };
+}
 const CAPS = [
  {k:"hepa",  n:"HEPA/ULPA Filtration & Fan Filter Units", z:["fan"]},
  {k:"iot",   n:"Environmental & IoT Sensor Mesh", z:["plenum","subfab"]},
@@ -357,8 +393,8 @@ const CORRIDOR={n:"NY SMART I-Corridor Tech Hub",
  cities:[["Batavia",-78.187,43.0],["Auburn",-76.566,42.932],["Ithaca",-76.50,42.44]]};
 function pip(r,[x,y]){let c=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const[xi,yi]=r[i],[xj,yj]=r[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c;}return c;}
 const inCorridor=d=>pip(CORRIDOR.ring,[d.lo,d.la]);
-const TIERN = {1:"Tier 1",2:"Tier 2",3:"Tier 3"};
-const state = {q:"", ref:8, corr:true, roads:true, tiers:new Set([1,2,3]), sec:null, tier:null, cap:null, zone:null};
+let TIERN = {0:"Unclassified",1:"Tier 1",2:"Tier 2",3:"Tier 3",4:"Support Organization"};
+const state = {q:"", ref:8, corr:true, roads:true, tiers:new Set([0,1,2,3,4]), sec:null, tier:null, cap:null, zone:null};
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
@@ -367,14 +403,15 @@ function miles(a,b){const R=3958.8,t=Math.PI/180,dl=(b.la-a.la)*t,dn=(b.lo-a.lo)
 function match(d){
   if(!state.tiers.has(d.t)) return false;
   const q=state.q.trim().toLowerCase(); if(!q) return true;
-  return [d.n,d.a,d.s,d.naics,d.vp,d.own,...d.c.map(k=>CAPN[k])].join(" ").toLowerCase().includes(q);
+  return [d.n,d.a,d.s,d.type,d.county,d.tl,...d.prim,...d.sec,
+          ...d.c.map(k=>CAPN[k]||"")].join(" ").toLowerCase().includes(q);
 }
 function coLink(d){return `<a class="co${match(d)?"":" dim"}" tabindex="0" data-id="${d.id}"><i class="dot d${d.t}"></i>${esc(d.n)}</a>`;}
 function list(arr){return `<ul class="colist">${arr.sort((a,b)=>a.t-b.t||a.n.localeCompare(b.n)).map(d=>`<li>${coLink(d)}</li>`).join("")}</ul>`;}
 /* Capabilities */
 const capCount=k=>CO.filter(d=>d.c.includes(k)).length;
 function renderCaps(){
-  const max=Math.max(...CAPS.map(c=>capCount(c.k)));
+  const max=Math.max(1,...CAPS.map(c=>capCount(c.k)));
   $("#caps").innerHTML=CAPS.map(c=>{const n=capCount(c.k);
     return `<button class="cap" data-k="${c.k}" aria-pressed="${state.cap===c.k}"><span>${esc(c.n)}</span><span class="bar"><i style="width:${n/max*100}%"></i></span><span class="n">${n}</span></button>`;}).join("");
   document.querySelectorAll(".cap").forEach(b=>b.onclick=()=>{state.cap=state.cap===b.dataset.k?null:b.dataset.k;state.zone=null;renderCaps();renderZones();renderCapInfo();});
@@ -406,18 +443,23 @@ function renderCapInfo(){
 const pop=$("#pop"); let hideT=null, pinned=false;
 function showPop(d,x,y){
   clearTimeout(hideT);
-  const ref=REFS[state.ref], mi=Math.round(miles(ref,d));
-  pop.innerHTML=`<div class="ph"><h4>${esc(d.n)}</h4><span class="tag">${TIERN[d.t]}</span></div><div class="pb">
-   <dl><dt>Website</dt><dd><a href="https://www.${esc(d.w)}" target="_blank" rel="noopener">${esc(d.w)}</a></dd>
-   <dt>Address</dt><dd>${esc(d.a)}</dd>
-   <dt>Contact</dt><dd>Via website contact page</dd>
-   <dt>Distance</dt><dd class="mono">${mi.toLocaleString()} mi from ${esc(ref.s)}</dd>
-   <dt>Corridor</dt><dd>${inCorridor(d)?"Inside NY SMART I-Corridor":"Outside NY SMART I-Corridor"}</dd></dl>
-   <details ${pop.dataset.open==="1"?"open":""}><summary>Business details</summary>
-   <dl><dt>Sector</dt><dd>${esc(d.s)}</dd><dt>NAICS</dt><dd class="mono">${esc(d.naics)}</dd><dt>Revenue</dt><dd>${esc(d.rev)}</dd>
-   <dt>Ownership</dt><dd>${esc(d.own)}</dd><dt>Compliance</dt><dd style="color:var(--muted)">Not yet recorded</dd>
-   <dt>Capability</dt><dd><div class="pills">${d.c.map(k=>`<span>${esc(CAPN[k])}</span>`).join("")}</div></dd></dl>
-   <div class="vp" style="margin-top:8px"><b>Value proposition.</b> ${esc(d.vp)}</div></details></div>`;
+  const ref=REFS[state.ref], sited=(d.la!=null&&d.lo!=null);
+  const mi=sited?Math.round(miles(ref,d)):null;
+  const where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" \u00b7 ");
+  pop.innerHTML=`<div class="ph"><h4>${esc(d.n)}</h4><span class="tag">${esc(d.tl)}</span></div><div class="pb">
+   <dl>${d.w?`<dt>Website</dt><dd><a href="${esc(d.href)}" target="_blank" rel="noopener">${esc(d.w)}</a></dd>`:""}
+   <dt>Address</dt><dd>${esc(d.a||"Not recorded")}${d.maps?` &middot; <a href="${esc(d.maps)}" target="_blank" rel="noopener">map</a>`:""}</dd>
+   <dt>Contact</dt><dd>${d.contact?esc(d.contact):"Via website contact page"}</dd>
+   ${mi!=null?`<dt>Distance</dt><dd class="mono">${mi.toLocaleString()} mi from ${esc(ref.s)}</dd>`:""}
+   <dt>Corridor</dt><dd>${sited?(inCorridor(d)?"Inside NY SMART I-Corridor":"Outside NY SMART I-Corridor"):"Location not recorded"}</dd></dl>
+   <details ${pop.dataset.open==="1"?"open":""}><summary>Supplier details</summary>
+   <dl><dt>Sector</dt><dd>${esc(d.s)}</dd>
+   ${d.type?`<dt>Type</dt><dd>${esc(d.type)}</dd>`:""}
+   ${where?`<dt>Location</dt><dd>${esc(where)}</dd>`:""}
+   ${d.prim.length?`<dt>Primary</dt><dd>${d.prim.map(esc).join("; ")}</dd>`:""}
+   ${d.sec.length?`<dt>Also does</dt><dd>${d.sec.map(esc).join("; ")}</dd>`:""}
+   <dt>Fab capability</dt><dd>${d.c.length?`<div class="pills">${d.c.map(k=>`<span>${esc(CAPN[k]||k)}</span>`).join("")}</div>`:`<span style="color:var(--muted)">Not mapped to a fab capability</span>`}</dd>
+   ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document</a></dd>`:""}</dl></details></div>`;
   pop.querySelector("details").addEventListener("toggle",e=>{pop.dataset.open=e.target.open?"1":"0";place(x,y);});
   pop.hidden=false; place(x,y);
 }
@@ -441,7 +483,38 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("focusin",e=>{const t=e.target.closest("[data-id]"); if(t){const b=t.getBoundingClientRect();showPop(CO[+t.dataset.id],b.left,b.bottom);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){pinned=false;pop.hidden=true;}});
-renderCaps();renderZones();renderCapInfo();
+function stampFooter(){
+  const el=$("#datanote"); if(!el) return;
+  const mapped=CO.filter(d=>d.c.length).length;
+  el.innerHTML=`${CO.length} suppliers from the Tech Hub listing, data version `
+    +`<span class="mono">${esc(META.data_version||"unknown")}</span>. ${mapped} are mapped to fab `
+    +`capabilities and appear in the cutaway. Records were compiled by web scraping and are not `
+    +`fully validated; verify before outreach.`;
+}
+async function init(){
+  const caps=$("#caps"), info=$("#capinfo");
+  info.innerHTML=`<div class="hint">Loading supplier data\u2026</div>`;
+  try{
+    const res=await fetch(DATA_URL,{cache:"no-cache"});
+    if(!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    const data=await res.json();
+    META=data.meta||{}; FACETS=data.facets||{};
+    if(META.tier_names) TIERN=Object.assign({},TIERN,META.tier_names);
+    CO=(data.suppliers||[]).map(adapt);
+    if(!CO.length) throw new Error("the file contains no supplier records");
+    stampFooter(); renderCaps(); renderZones(); renderCapInfo();
+  }catch(err){
+    caps.innerHTML="";
+    renderZones();
+    info.innerHTML=`<div class="hint"><b>Could not load supplier data.</b><br>`
+      +`<code>${esc(DATA_URL)}</code> &mdash; ${esc(err.message)}.<br><br>`
+      +`If you opened this file directly from disk, serve it over http instead: browsers block `
+      +`fetch on file:// URLs. From the folder holding this page, run `
+      +`<code>python3 -m http.server</code> and open the localhost address.</div>`;
+    const note=$("#datanote"); if(note) note.textContent="Supplier data unavailable.";
+  }
+}
+init();
 </script>
 
 <!-- Visitor feedback tracking: Microsoft Clarity + GoatCounter events. Clarity project ID: z995023x6u. -->

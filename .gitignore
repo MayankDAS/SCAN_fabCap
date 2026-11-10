@@ -1,2 +1,9 @@
 build/
 data/*.csv
+
+# The master supplier workbook is the source of truth and holds withheld
+# columns (contact emails, revenue bands, certification and match scores).
+# This repo is public, so it must never be committed here.
+Tech_Hub_Company_Listing.xlsx
+*_Company_Listing.xlsx
+build_report.txt
