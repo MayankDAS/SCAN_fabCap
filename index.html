@@ -871,7 +871,7 @@ function renderAbout(){
      <li>Selecting a capability highlights its fab zones with a striped pattern and a numbered label. Selecting a zone lists every supplier whose capabilities serve it.</li>
      <li>Suppliers are sorted nearest to ${esc(REFS[state.ref].s)} first. Change the order with Sort.</li></ul>
     <h4>Supplier tiers</h4><ul>${tiersIn(CO).map(t=>`<li>${tpill(t)} ${TIERDEF[t]}.</li>`).join("")}</ul>
-    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists. Records were compiled by web scraping and are not fully validated. Verify before outreach.</p></div>
+    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists.</p></div>
    <div class="acol"><h4>Glossary</h4><dl class="gloss">${gl.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></div>`;
 }
 
