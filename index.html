@@ -265,8 +265,64 @@ tableau-viz{display:block;width:100%}
 .tabsetup ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 .tabsetup code{font-size:12.5px;background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:1px 6px;overflow-wrap:anywhere}
 .wrap{padding-top:64px}
+/* ===== Dashboard search ===== */
+.searchpanel{gap:10px}
+.searchpanel label{font:600 20px var(--display);color:var(--ink);display:flex;align-items:center;gap:10px}
+.searchpanel label::before{content:"";width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex:none}
+.searchhelp{margin:0;font-size:15px;line-height:1.5;color:var(--ink2)}
+.searchhelp b{color:var(--ink);font-weight:700}
+.sbox{position:relative}
+.sfield{display:flex;align-items:center;gap:10px;border:2px solid var(--border);border-radius:12px;background:var(--panel);padding:0 12px}
+.sfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.sfield svg{width:20px;height:20px;color:var(--ink2);flex:none}
+.sfield input{flex:1;min-width:0;border:0;outline:none;background:transparent;color:var(--ink);font:16px var(--body);padding:12px 0}
+.sfield input::placeholder{color:var(--muted)}
+.sfield input::-webkit-search-cancel-button{-webkit-appearance:none;display:none}
+.sclear{border:0;background:transparent;color:var(--ink2);font:700 15px var(--body);cursor:pointer;padding:6px 4px;border-radius:6px}
+.sclear:hover{color:var(--accent)}
+.sresults{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:var(--panel);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 18px 40px -16px rgba(10,40,100,.45);max-height:min(420px,60vh);overflow:auto;padding:6px}
+.sresults .sgh{font:700 12.5px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);padding:8px 10px 4px;display:flex;justify-content:space-between}
+.sresults ul{list-style:none;margin:0;padding:0}
+.sresults a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:15px}
+.sresults a .sm{margin-left:auto;font-size:13.5px;color:var(--ink2);white-space:nowrap;text-align:right}
+.sresults a .sn{text-decoration:underline;text-decoration-color:var(--border);text-underline-offset:3px;min-width:0}
+.sresults a:hover,.sresults a.act{background:var(--accent-soft)}
+.sresults a:hover .sn,.sresults a.act .sn{text-decoration-color:var(--accent);color:var(--accent)}
+.sresults mark{background:color-mix(in srgb,var(--accent2) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
+.sresults .sicon{width:28px;height:22px;border-radius:6px;display:grid;place-items:center;flex:none;font:700 11px var(--body);color:#fff;white-space:nowrap}
+.sicon.k1{background:#0b3d91}.sicon.k2{background:#1f78d1}.sicon.k3{background:#0b7390}
+.sresults .snone{padding:12px 10px;color:var(--ink2);font-size:15px;margin:0}
+.sresults .smore{padding:4px 10px 8px;font-size:13.5px;color:var(--ink2);margin:0}
+@media (max-width:560px){.sresults a .sm{display:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.capinfo{scroll-margin-top:72px}
+.capinfo h3:focus{outline:none}
+.capinfo h3:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.coview{display:flex;flex-direction:column;gap:10px}
+.coview .eyebrow{margin-bottom:2px}
+.coview dl{display:grid;grid-template-columns:120px minmax(0,1fr);gap:6px 12px;margin:0;font-size:14.5px}
+.coview dt{font-weight:700;color:var(--ink2)}
+.coview dd{margin:0;overflow-wrap:anywhere}
+.coview a{color:var(--accent)}
+.cochips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:14px;color:var(--ink2)}
+.cochip{border:1px solid var(--border);background:var(--panel);color:var(--ink);border-radius:999px;padding:3px 10px;font:500 13.5px var(--body);cursor:pointer}
+.cochip:hover{border-color:var(--accent);color:var(--accent)}
+.tlabel{display:inline-block;font:700 12px/1.6 var(--body);padding:0 9px;border-radius:999px;color:#fff;background:var(--t1)}
+@media (max-width:560px){.coview dl{grid-template-columns:1fr}}
 </style>
 <div class="wrap">
+  <section class="panel searchpanel" aria-labelledby="slbl" role="search">
+    <label id="slbl" for="dsearch">Search the dashboard</label>
+    <p class="searchhelp" id="shelp">Type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example CNC machining or reverse osmosis) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to jump to its details in the supplier capabilities section below.</p>
+    <div class="sbox">
+      <div class="sfield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="dsearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search companies, capabilities or sectors" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sresults" aria-describedby="shelp">
+        <button type="button" class="sclear" id="sclear" hidden aria-label="Clear search">✕</button></div>
+      <div class="sresults" id="sresults" role="listbox" aria-label="Search results" hidden></div>
+    </div>
+    <p class="sr" id="scount" aria-live="polite"></p>
+  </section>
   <section class="panel" aria-labelledby="h-tab">
     <div class="phead"><h2 id="h-tab">Tech Hub supplier ecosystem overview</h2><span class="hint">Live from Tableau Public · use the toolbar below the viz for full screen or download</span></div>
     <div class="tabwrap"><div class='tableauPlaceholder' id='viz1792511789497' style='position: relative'><noscript><a href='#'><img alt='TECH HUB SUPPLIER ECOSYSTEM OVERVIEW ' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;28&#47;28QZ39D44&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='path' value='shared&#47;28QZ39D44' /> <param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;28&#47;28QZ39D44&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='yes' /><param name='language' value='en-US' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1792511789497');                    var vizElement = divElement.getElementsByTagName('object')[0];                    if ( divElement.offsetWidth > 800 ) { vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else if ( divElement.offsetWidth > 500 ) { vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else { vizElement.style.width='100%';vizElement.style.height='2777px';}                     var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
@@ -414,22 +470,42 @@ function renderCaps(){
   const max=Math.max(1,...CAPS.map(c=>capCount(c.k)));
   $("#caps").innerHTML=CAPS.map(c=>{const n=capCount(c.k);
     return `<button class="cap" data-k="${c.k}" aria-pressed="${state.cap===c.k}"><span>${esc(c.n)}</span><span class="bar"><i style="width:${n/max*100}%"></i></span><span class="n">${n}</span></button>`;}).join("");
-  document.querySelectorAll(".cap").forEach(b=>b.onclick=()=>{state.cap=state.cap===b.dataset.k?null:b.dataset.k;state.zone=null;renderCaps();renderZones();renderCapInfo();});
+  document.querySelectorAll(".cap").forEach(b=>b.onclick=()=>{state.cap=state.cap===b.dataset.k?null:b.dataset.k;state.zone=null;state.coSel=null;state.sector=null;renderCaps();renderZones();renderCapInfo();});
 }
-function activeZones(){ if(state.zone) return [state.zone]; if(state.cap) return CAPS.find(c=>c.k===state.cap).z; return []; }
+function activeZones(){ if(state.coSel!=null&&CO[state.coSel]) return [...new Set(CO[state.coSel].c.flatMap(k=>(CAPS.find(c=>c.k===k)||{z:[]}).z))]; if(state.zone) return [state.zone]; if(state.cap) return CAPS.find(c=>c.k===state.cap).z; return []; }
 function renderZones(){
   const on=new Set(activeZones());
   $("#zones").innerHTML=Object.entries(ZONES).map(([k,z])=>{const [x,y,w,h]=z.r;
     return `<rect class="zone${on.has(k)?" on":""}" data-z="${k}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"><title>${esc(z.n)}</title></rect>`;}).join("")
    + Object.entries(ZONES).filter(([k])=>on.has(k)).map(([k,z])=>{const [x,y,w,h]=z.r;
     return `<text class="zlbl" x="${x+12}" y="${y+h/2+9}">${esc(z.n)}</text>`;}).join("");
-  document.querySelectorAll(".zone").forEach(r=>r.onclick=()=>{const z=r.dataset.z;state.zone=state.zone===z?null:z;state.cap=null;renderCaps();renderZones();renderCapInfo();});
+  document.querySelectorAll(".zone").forEach(r=>r.onclick=()=>{const z=r.dataset.z;state.zone=state.zone===z?null:z;state.cap=null;state.coSel=null;state.sector=null;renderCaps();renderZones();renderCapInfo();});
 }
 function renderCapInfo(){
   const el=$("#capinfo");
-  if(state.cap){
+  if(state.coSel!=null&&CO[state.coSel]){
+    const d=CO[state.coSel], ref=REFS[state.ref], sited=(d.la!=null&&d.lo!=null);
+    const zs=activeZones(), where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" \u00b7 ");
+    el.innerHTML=`<div class="coview"><div><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)} <span class="tlabel" style="background:var(--t${d.t})">${esc(d.tl)}</span></h3></div>
+      <dl><dt>Sector</dt><dd>${esc(d.s)}</dd>
+      ${d.type?`<dt>Type</dt><dd>${esc(d.type)}</dd>`:""}
+      ${where?`<dt>Location</dt><dd>${esc(where)}</dd>`:""}
+      <dt>Address</dt><dd>${esc(d.a||"Not recorded")}${d.maps?` &middot; <a href="${esc(d.maps)}" target="_blank" rel="noopener">map</a>`:""}</dd>
+      ${d.w?`<dt>Website</dt><dd><a href="${esc(d.href)}" target="_blank" rel="noopener">${esc(d.w)}</a></dd>`:""}
+      <dt>Contact</dt><dd>${d.contact?esc(d.contact):"Via website contact page"}</dd>
+      ${sited?`<dt>Distance</dt><dd>${Math.round(miles(ref,d)).toLocaleString()} mi from ${esc(ref.s)}</dd><dt>Corridor</dt><dd>${inCorridor(d)?"Inside NY SMART I-Corridor":"Outside NY SMART I-Corridor"}</dd>`:""}
+      ${d.prim.length?`<dt>Primary</dt><dd>${d.prim.map(esc).join("; ")}</dd>`:""}
+      ${d.sec.length?`<dt>Also does</dt><dd>${d.sec.map(esc).join("; ")}</dd>`:""}
+      ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document</a></dd>`:""}</dl>
+      <div class="cochips"><span>Fab capabilities:</span>${d.c.length?d.c.map(k=>`<button type="button" class="cochip" data-k="${k}">${esc(CAPN[k]||k)}</button>`).join(""):"<span>Not mapped to a fab capability, so no zone lights up.</span>"}</div>
+      ${zs.length?`<div class="zones-line">Highlighted in the fab: ${zs.map(z=>ZONES[z].n).join(" · ")}</div>`:""}</div>`;
+    el.querySelectorAll(".cochip").forEach(b=>b.onclick=()=>{Object.assign(state,{cap:b.dataset.k,zone:null,coSel:null,sector:null});renderCaps();renderZones();renderCapInfo();});
+  } else if(state.sector){
+    const arr=CO.filter(d=>d.s===state.sector), mapped=arr.filter(d=>d.c.length).length;
+    el.innerHTML=`<div class="eyebrow">Industry sector</div><h3 tabindex="-1">${esc(state.sector)} <span class="hint mono">${arr.length} suppliers</span></h3><div class="zones-line">${mapped} of ${arr.length} are mapped to fab capabilities. Hover or click a name for its profile.</div>${list(arr)}`;
+  } else if(state.cap){
     const c=CAPS.find(x=>x.k===state.cap), arr=CO.filter(d=>d.c.includes(c.k));
-    el.innerHTML=`<h3>${esc(c.n)} <span class="hint mono">${arr.length} suppliers</span></h3><div class="zones-line">Where it lives in the fab: ${c.z.map(z=>ZONES[z].n).join(" · ")}</div>${list(arr)}`;
+    el.innerHTML=`<h3 tabindex="-1">${esc(c.n)} <span class="hint mono">${arr.length} suppliers</span></h3><div class="zones-line">Where it lives in the fab: ${c.z.map(z=>ZONES[z].n).join(" · ")}</div>${list(arr)}`;
   } else if(state.zone){
     const caps=CAPS.filter(c=>c.z.includes(state.zone)), keys=new Set(caps.map(c=>c.k));
     const arr=CO.filter(d=>d.c.some(k=>keys.has(k)));
@@ -514,6 +590,63 @@ async function init(){
     const note=$("#datanote"); if(note) note.textContent="Supplier data unavailable.";
   }
 }
+/* ---------- Dashboard search ---------- */
+(function(){
+  const sIn=$("#dsearch"), sRes=$("#sresults"), sClr=$("#sclear"), sCount=$("#scount"), MAXCO=25;
+  let items=[], act=-1;
+  const pl=(n,a,b)=>`${n} ${n===1?a:b}`;
+  function hl(text,q){const i=text.toLowerCase().indexOf(q); if(i<0) return esc(text);
+    return esc(text.slice(0,i))+"<mark>"+esc(text.slice(i,i+q.length))+"</mark>"+esc(text.slice(i+q.length));}
+  function run(){
+    const raw=sIn.value.trim(), q=raw.toLowerCase(); sClr.hidden=!raw;
+    if(!q){close(); sCount.textContent=""; return;}
+    if(!CO.length){sRes.innerHTML=`<p class="snone">Supplier data is still loading. Try again in a moment.</p>`;open();return;}
+    const pos=s=>s.toLowerCase().indexOf(q);
+    const cos=CO.filter(d=>pos(d.n)>=0).sort((a,b)=>pos(a.n)-pos(b.n)||a.n.localeCompare(b.n));
+    const caps=CAPS.filter(c=>pos(c.n)>=0);
+    const secs=[...new Set(CO.map(d=>d.s))].filter(s=>pos(s)>=0).sort();
+    const shown=cos.slice(0,MAXCO);
+    items=[...shown.map(d=>({type:"co",id:d.id,name:d.n})),...caps.map(c=>({type:"cap",k:c.k,name:c.n})),...secs.map(s=>({type:"sec",s,name:s}))];
+    act=-1; let i=0;
+    const link=(icon,cls,name,meta,label)=>{const idx=i++;return `<li role="presentation"><a href="#capinfo" role="option" id="sopt${idx}" data-i="${idx}" aria-selected="false" aria-label="${esc(label)}"><span class="sicon ${cls}" aria-hidden="true">${icon}</span><span class="sn">${name}</span><span class="sm">${meta}</span></a></li>`;};
+    const grp=(title,total,body,more)=>total?`<div class="sgh" role="presentation"><span>${title}</span><span>${total}</span></div><ul role="presentation">${body}</ul>${more||""}`:"";
+    const place=d=>[d.city,d.st].filter(Boolean).join(", ");
+    const html=
+      grp("Companies",cos.length,shown.map(d=>link("Co","k1",hl(d.n,q),[d.tl,place(d)].filter(Boolean).map(esc).join(" · "),`Company: ${d.n}, ${d.tl}${place(d)?", "+place(d):""}`)).join(""),
+          cos.length>MAXCO?`<p class="smore">Showing ${MAXCO} of ${cos.length}. Type more of the name to narrow the list.</p>`:"")
+     +grp("Capabilities",caps.length,caps.map(c=>{const n=capCount(c.k);return link("Ca","k2",hl(c.n,q),pl(n,"supplier","suppliers"),`Capability: ${c.n}, ${pl(n,"supplier","suppliers")}`);}).join(""))
+     +grp("Industry sectors",secs.length,secs.map(s=>{const n=CO.filter(d=>d.s===s).length;return link("Se","k3",hl(s,q),pl(n,"company","companies"),`Industry sector: ${s}, ${pl(n,"company","companies")}`);}).join(""));
+    sRes.innerHTML=html||`<p class="snone">No company, capability or sector matches “${esc(raw)}”. Try a shorter word.</p>`;
+    open();
+    sCount.textContent=items.length?`${pl(cos.length+caps.length+secs.length,"result","results")}: ${pl(cos.length,"company","companies")}, ${pl(caps.length,"capability","capabilities")}, ${pl(secs.length,"sector","sectors")}.`:"No results.";
+    sRes.querySelectorAll("a[data-i]").forEach(a=>{a.onclick=e=>{e.preventDefault();go(+a.dataset.i);};a.onmousemove=()=>setAct(+a.dataset.i,false);});
+  }
+  function open(){sRes.hidden=false;sIn.setAttribute("aria-expanded","true");}
+  function close(){sRes.hidden=true;sIn.setAttribute("aria-expanded","false");sIn.removeAttribute("aria-activedescendant");act=-1;}
+  function setAct(n,scroll=true){act=n;
+    sRes.querySelectorAll("a[data-i]").forEach(a=>{const on=+a.dataset.i===n;a.classList.toggle("act",on);a.setAttribute("aria-selected",on);if(on&&scroll)a.scrollIntoView({block:"nearest"});});
+    n>=0?sIn.setAttribute("aria-activedescendant","sopt"+n):sIn.removeAttribute("aria-activedescendant");}
+  function go(n){
+    const it=items[n]; if(!it) return;
+    Object.assign(state,{cap:it.type==="cap"?it.k:null,zone:null,coSel:it.type==="co"?it.id:null,sector:it.type==="sec"?it.s:null});
+    renderCaps(); renderZones(); renderCapInfo(); close();
+    try{ if(window.clarity){window.clarity("event","search_result_open");window.clarity("set","last_search_type",it.type);} }catch(e){}
+    try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path:"ev/search_result_open",title:"search_result_open",event:true}); }catch(e){}
+    const box=$("#capinfo"); box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+    const h=box.querySelector("h3"); if(h) setTimeout(()=>h.focus({preventScroll:true}),350);
+  }
+  sIn.addEventListener("input",run);
+  sIn.addEventListener("focus",()=>{if(sIn.value.trim()) run();});
+  sIn.addEventListener("keydown",e=>{
+    const n=items.length;
+    if(e.key==="ArrowDown"){e.preventDefault(); if(sRes.hidden) run(); if(n) setAct((act+1)%n);}
+    else if(e.key==="ArrowUp"){e.preventDefault(); if(n) setAct((act-1+n)%n);}
+    else if(e.key==="Enter"){e.preventDefault(); if(n) go(act>=0?act:0);}
+    else if(e.key==="Escape"){ if(!sRes.hidden){e.preventDefault();close();} else {sIn.value="";sClr.hidden=true;sCount.textContent="";} }
+  });
+  sClr.onclick=()=>{sIn.value="";sClr.hidden=true;close();sCount.textContent="";sIn.focus();};
+  document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) close();});
+})();
 init();
 </script>
 
