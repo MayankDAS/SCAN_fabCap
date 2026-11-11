@@ -942,8 +942,7 @@ function stampFooter(){
   const mapped=CO.filter(d=>d.c.length).length;
   el.innerHTML=`${CO.length} suppliers from the Tech Hub listing, data version `
     +`<span class="mono">${esc(META.data_version||"unknown")}</span>. ${mapped} are mapped to fab `
-    +`capabilities and appear in the cutaway. Records were compiled by web scraping and are not `
-    +`fully validated; verify before outreach.`;
+    +`capabilities and appear in the cutaway.`;
 }
 async function init(){
   $("#capinfo").innerHTML=`<p class="help">Loading supplier data…</p>`;
