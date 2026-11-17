@@ -498,10 +498,28 @@ footer{font-size:14.5px}
 .tableau-viz,tableau-viz{display:block;width:100%}
 .tabsetup{padding:22px;display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink2)}
 .nodata{color:var(--ink2);font-size:14.5px}
+
+/* Sponsor logos, right side of the title band */
+.sponsors{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
+.sponsors .logos{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:14px 22px}
+.sponsors img{height:52px;width:auto;display:block}
+.sponsors .sep{width:1px;height:44px;background:rgba(255,255,255,.35)}
+@media (max-width:760px){.sponsors{align-items:flex-start;margin-left:0}.sponsors .logos{justify-content:flex-start}}
+@media (max-width:520px){.sponsors img{height:40px}.sponsors .sep{height:34px}}
 </style>
 <div class="wrap">
   <header>
     <div class="ttl"><h1>Supply Chain Activation Network (SCAN) Dashboard 2.0</h1></div>
+    <div class="sponsors" aria-label="Sponsors">
+      <span class="eyebrow">Sponsored by</span>
+      <div class="logos">
+        <img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee" width="768" height="198">
+        <!-- UB Center for Supply Chain Analytics logo goes here, after a separator:
+        <span class="sep" aria-hidden="true"></span>
+        <img src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics">
+        -->
+      </div>
+    </div>
   </header>
   <section class="panel searchpanel" aria-labelledby="slbl" role="search">
     <label id="slbl" for="dsearch">Search the dashboard</label>
