@@ -595,6 +595,16 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
 .stmtfilter{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
 .stmtfilter input{width:16px;height:16px;accent-color:var(--accent)}
 .suptools{flex-wrap:wrap}
+/* ===== Collapsible zone groups ===== */
+.zgroup{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.zgroup>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;flex-wrap:wrap}
+.zgroup>summary::-webkit-details-marker{display:none}
+.zgroup>summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.zgroup .zgt{font:700 13px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+.zgroup .zgc{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--body);color:var(--ink2)}
+.zgroup .zgc svg{width:16px;height:16px;transition:transform .2s}
+.zgroup[open] .zgc svg{transform:rotate(180deg)}
+.zgroup .zlist{padding:0 12px 12px}
 </style>
 <div class="wrap">
   <div class="fit">
@@ -847,7 +857,7 @@ const TSHAPE={1:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" w
               4:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6 .4 5z"/></svg>',
               0:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2"/></svg>'};
 const tpill=t=>`<span class="tpill t${t}">${TSHAPE[t]||""}${esc(TIERN[t]||"Unclassified")}</span>`;
-Object.assign(state,{sort:"dist",closed:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});
+Object.assign(state,{sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});
 const stmtBadge=d=>d.statement?`<a class="stmt" href="${esc(d.statement)}" target="_blank" rel="noopener" title="Open capability statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Statement<span class="sr"> for ${esc(d.n)} (opens in a new tab)</span></a>`:"";
 
 function loc(d){return [d.city,d.st].filter(Boolean).join(", ")||"Location not recorded";}
@@ -918,9 +928,12 @@ function renderZones(){
     return `<span class="zb${isOn?" on":""}${right?" r":""}" data-z="${k}" style="${pos}" title="${esc(z.n)}">${isOn?`${n}<span class="zbn"> · ${esc(z.n)}</span>`:n}</span>`;}).join("");
   const hl=[...on].sort((a,b)=>ZNUM[a]-ZNUM[b]).map(k=>`zone ${ZNUM[k]}, ${ZONES[k].n}`);
   $("#cutsum").textContent=hl.length?`Highlighted on the cutaway${state.cap?` for ${CAPN[state.cap]}`:""}: ${hl.join("; ")}.`:"No zones highlighted.";
-  $("#zlegend").innerHTML=ZONE_GROUPS.map(G=>`<div class="zgroup"><h4>${esc(G.g)}</h4><ul class="zlist">${
+  const zchev='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  $("#zlegend").innerHTML=ZONE_GROUPS.map((G,gi)=>{const nOn=G.k.filter(k=>on.has(k)).length;
+    return `<details class="zgroup" data-zg="${gi}"${state.zopen.has(gi)?" open":""}><summary><span class="zgt">${esc(G.g)}</span><span class="zgc">${G.k.length} zones${nOn?` · ✓ ${nOn} highlighted`:""}${zchev}</span></summary><ul class="zlist">${
     G.k.map(k=>{const lit=on.has(k)&&state.zone!==k;
-      return `<li><button type="button" class="zbtn${lit?" lit":""}" data-z="${k}" aria-pressed="${state.zone===k}"><b aria-hidden="true">${ZNUM[k]}</b>${esc(ZONES[k].n)}${lit?' <span class="lm" aria-hidden="true">✓</span><span class="sr"> (highlighted)</span>':""}</button></li>`;}).join("")}</ul></div>`).join("");
+      return `<li><button type="button" class="zbtn${lit?" lit":""}" data-z="${k}" aria-pressed="${state.zone===k}"><b aria-hidden="true">${ZNUM[k]}</b>${esc(ZONES[k].n)}${lit?' <span class="lm" aria-hidden="true">✓</span><span class="sr"> (highlighted)</span>':""}</button></li>`;}).join("")}</ul></details>`;}).join("");
+  document.querySelectorAll(".zgroup").forEach(d=>d.addEventListener("toggle",()=>{const g=+d.dataset.zg; d.open?state.zopen.add(g):state.zopen.delete(g);}));
   document.querySelectorAll(".zone,.zb,.zbtn").forEach(r=>r.onclick=()=>{const z=r.dataset.z;select(null,state.zone===z?null:z);});
 }
 
@@ -1084,7 +1097,7 @@ sClr.onclick=()=>{clearSearch();sIn.focus();};
 document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) closeSearch();});
 
 /* ---------- reset ---------- */
-$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
+$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
 
 
 function stampFooter(){
