@@ -507,6 +507,20 @@ footer{font-size:14.5px}
 .sponsors .sep{width:1px;height:52px;background:rgba(255,255,255,.35)}
 @media (max-width:760px){.sponsors{align-items:flex-start;margin-left:0}.sponsors .logos{justify-content:flex-start}}
 @media (max-width:520px){.sponsors img{height:40px}.sponsors img.ub{height:52px}.sponsors .sep{display:none}}
+/* ===== Feedback pass: one accent colour, neutral tiers and families ===== */
+.tpill,.tpill.t0,.tpill.t1,.tpill.t2,.tpill.t3,.tpill.t4{background:var(--panel);color:var(--ink);border:1.5px solid var(--ink2);font-weight:700}
+.tpill svg{fill:var(--ink)}
+.capgroup,.capgroup.fam0,.capgroup.fam1,.capgroup.fam2,.capgroup.fam3,.capgroup.fam4{--gb:var(--panel);--gl:var(--line);--gk:var(--ink2);background:var(--panel);border:1px solid var(--line);border-left:1px solid var(--line)}
+.capgroup .gc{color:var(--ink2)}
+.capgroup .cap:hover{background:var(--soft)}
+.sresults .sicon,.sicon.k1,.sicon.k2,.sicon.k3{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.stmt{display:inline-flex;align-items:center;gap:4px;font:700 12.5px/1.4 var(--body);color:var(--accent);border:1px solid currentColor;border-radius:6px;padding:0 6px;text-decoration:none;white-space:nowrap}
+.stmt svg{width:13px;height:13px}
+.stmt:hover{background:var(--accent-soft)}
+.stmt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.stmtfilter{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.stmtfilter input{width:16px;height:16px;accent-color:var(--accent)}
+.suptools{flex-wrap:wrap}
 </style>
 <div class="wrap">
   <header>
@@ -544,7 +558,7 @@ footer{font-size:14.5px}
         <div class="seg" role="group" aria-label="Fab view"><button type="button" data-view="cut" aria-pressed="true">Cutaway</button><button type="button" data-view="list" aria-pressed="false">List</button></div>
         <button type="button" class="resetbtn" id="resetbtn">↺ Reset</button>
       </div></div>
-    <p class="howto" id="howto-cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> pick a capability or a numbered fab zone and its suppliers appear alongside. Switch to <b>List</b> for a text version. Works with Tab, Enter and Space.</span></p>
+    <p class="howto" id="howto-cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span>Pick a capability or a numbered fab zone to list its suppliers. Tiers, glossary and data notes are under <b>About this view</b> at the bottom.</span></p>
     <div class="capgrid">
       <div class="figcol">
         <div id="cutview">
@@ -743,7 +757,8 @@ const TSHAPE={1:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" w
               4:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6 .4 5z"/></svg>',
               0:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2"/></svg>'};
 const tpill=t=>`<span class="tpill t${t}">${TSHAPE[t]||""}${esc(TIERN[t]||"Unclassified")}</span>`;
-Object.assign(state,{sort:"dist",closed:new Set(),openSup:new Set(),view:"cut"});
+Object.assign(state,{sort:"dist",closed:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});
+const stmtBadge=d=>d.statement?`<a class="stmt" href="${esc(d.statement)}" target="_blank" rel="noopener" title="Open capability statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Statement<span class="sr"> for ${esc(d.n)} (opens in a new tab)</span></a>`:"";
 
 function loc(d){return [d.city,d.st].filter(Boolean).join(", ")||"Location not recorded";}
 const isNY=d=>d.st==="NY"||/, NY\b/.test(d.a);
@@ -753,14 +768,14 @@ const distTxt=d=>sited(d)?`${Math.round(REFD(d)).toLocaleString()} mi`:"No locat
 function sortSup(arr){
   const byDist=(a,b)=>REFD(a)-REFD(b), byTier=(a,b)=>TORDER.indexOf(a.t)-TORDER.indexOf(b.t)||a.n.localeCompare(b.n);
   const f={dist:byDist,ny:(a,b)=>(isNY(b)-isNY(a))||byDist(a,b),tier:byTier,name:(a,b)=>a.n.localeCompare(b.n)}[state.sort]||byDist;
-  return [...arr].sort(f);}
+  return [...arr].filter(d=>!state.stmtOnly||d.statement).sort(f);}
 const SORTS=[["dist",()=>`Distance to ${REFS[state.ref].s}`],["ny",()=>"New York first"],["tier",()=>"Tier"],["name",()=>"Name"]];
 
 /* One supplier row, used by both the results panel and the List view */
 function supRow(d,ctx){
   const pid=`p${ctx}${d.id}`, key=`${ctx}:${d.id}`, open=state.openSup.has(key), ref=REFS[state.ref];
   return `<li class="srow"><button type="button" class="cobtn" data-key="${key}" aria-expanded="${open}" aria-controls="${pid}"><span class="caret" aria-hidden="true">▶</span>${esc(d.n)}</button>
-    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div>
+    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${stmtBadge(d)}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div>
     <div class="profile" id="${pid}"${open?"":" hidden"}>${profile(d)}</div></li>`;}
 function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" · ");
   return `<dl>${d.w?`<dt>Website</dt><dd><a href="${esc(d.href)}" target="_blank" rel="noopener">${esc(d.w)}<span class="sr"> (opens in a new tab)</span></a></dd>`:""}
@@ -789,7 +804,7 @@ function renderCaps(){
   const max=Math.max(...CAPS.map(c=>capCount(c.k)));
   const ranked=[...CAPS].sort((a,b)=>capCount(b.k)-capCount(a.k)), low=ranked[ranked.length-1];
   const chev='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
-  $("#caps").innerHTML=`<p class="insight"><b>Most supplied:</b> ${ranked.slice(0,3).map(c=>`${esc(c.n)} (${capCount(c.k)})`).join(", ")}. <b>Fewest:</b> ${esc(low.n)} (${capCount(low.k)}).<span class="sr"> The number beside each capability is how many of the ${CO.length} suppliers offer it.</span></p>
+  $("#caps").innerHTML=`<p class="sr">The number beside each capability is how many of the ${CO.length} suppliers offer it.</p>
    <div class="captools"><button type="button" data-all="open">Expand all</button><button type="button" data-all="close">Collapse all</button></div>`+
    CAP_GROUPS.map((G,gi)=>{const sel=G.k.includes(state.cap);
     return `<details class="capgroup fam${gi}" data-g="${gi}"${state.closed.has(gi)?"":" open"}><summary><span class="gt">${esc(G.g)}</span><span class="gd">${esc(G.d)}</span><span class="gc">${G.k.length} items${sel?" · ✓ 1 selected":""}${chev}</span></summary><div class="gbody" role="group" aria-label="${esc(G.g)}">${
@@ -843,8 +858,9 @@ const tierLine=()=>`<p class="tierline" aria-label="Tier key">${tiersIn(CO).map(
 const tierCounts=arr=>tiersIn(arr).map(t=>`${arr.filter(d=>d.t===t).length} ${TIERN[t]}`).join(" · ");
 function supplierBlock(arr){
   const ny=arr.filter(isNY).length;
-  return `<div class="suptools"><span>${ny} of ${arr.length} in New York</span><label>Sort <select id="supsort">${SORTS.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${esc(l())}</option>`).join("")}</select></label></div>
-    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,"r")).join("")}</ul>${tierLine()}`;}
+  const st=arr.filter(d=>d.statement).length;
+  return `<div class="suptools"><span>${ny} of ${arr.length} in New York · ${st} with a statement</span><label class="stmtfilter"><input type="checkbox" id="stmtonly"${state.stmtOnly?" checked":""}${st?"":" disabled"}> Only suppliers with a capability statement</label><label>Sort <select id="supsort">${SORTS.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${esc(l())}</option>`).join("")}</select></label></div>
+    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,"r")).join("")}</ul>`;}
 function renderCapInfo(){
   const el=$("#capinfo");
   if(state.coSel!=null){
@@ -854,7 +870,7 @@ function renderCapInfo(){
       <p class="help">${esc(d.s)}${d.prim.length?" · "+d.prim.map(esc).join("; "):""}</p></div>
       <div class="where"><span>Fab capabilities:</span>${d.c.length?d.c.map(k=>`<button type="button" class="chip2" data-k="${k}">${esc(CAPN[k])}</button>`).join(""):`<span class="nodata">Not mapped to a fab capability, so no zone lights up.</span>`}</div>
       ${zs.length?"":"<!--"}<div class="where"><span>In the fab at:</span>${zs.map(z=>`<button type="button" class="chip2" data-z="${z}">${ZNUM[z]} · ${esc(ZONES[z].n)}</button>`).join("")}</div>${zs.length?"":"-->"}
-      <div class="profile" style="margin:0">${profile(d)}</div>${tierLine()}`;
+      <div class="profile" style="margin:0">${profile(d)}</div>`;
   } else if(state.sector){
     const arr=CO.filter(d=>d.s===state.sector);
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Industry sector</div><h3 tabindex="-1">${esc(state.sector)}</h3><p class="meta">${arr.length} suppliers · ${tierCounts(arr)}</p></div>
@@ -870,12 +886,13 @@ function renderCapInfo(){
       <div class="where"><span>Capabilities:</span>${caps.map(c=>`<button type="button" class="chip2" data-k="${c.k}">${esc(c.n)}</button>`).join("")}</div>
       ${supplierBlock(arr)}`;
   } else {
-    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>Pick a capability or a fab zone</h3><p class="help">Suppliers will appear here, nearest to ${esc(REFS[state.ref].s)} first, with tier, location and distance. Each name opens a full profile.</p></div>${tierLine()}`;
+    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>No selection yet</h3><p class="help">Suppliers for the capability or zone you pick appear here.</p></div>`;
   }
   el.querySelectorAll(".chip2[data-z]").forEach(b=>b.onclick=()=>select(null,b.dataset.z));
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
   bindRows(el);
   const ss=el.querySelector("#supsort"); if(ss) ss.onchange=e=>{state.sort=e.target.value;renderCapInfo();renderZoneList();el.querySelector("#supsort").focus();};
+  const so=el.querySelector("#stmtonly"); if(so) so.onchange=e=>{state.stmtOnly=e.target.checked;renderCapInfo();renderZoneList();el.querySelector("#stmtonly").focus();};
 }
 
 /* ---------- About this view ---------- */
@@ -886,12 +903,14 @@ function renderAbout(){
    ["UPW","Ultrapure water used to rinse wafers."],
    ["Corridor","Inside the NY SMART I-Corridor tech hub: Buffalo, Rochester and Syracuse metros plus Batavia, Auburn and Ithaca."],
    ["Micron Clay","Micron's megafab under construction in Clay, New York, used as the distance reference."]];
+  const ranked=[...CAPS].sort((a,b)=>capCount(b.k)-capCount(a.k)), low=ranked[ranked.length-1];
   $("#aboutbody").innerHTML=`<div class="acol"><h4>Reading the view</h4><ul>
      <li>The bar and number beside each capability show how many of the ${CO.length} suppliers offer it.</li>
      <li>Selecting a capability highlights its fab zones with a striped pattern and a numbered label. Selecting a zone lists every supplier whose capabilities serve it.</li>
-     <li>Suppliers are sorted nearest to ${esc(REFS[state.ref].s)} first. Change the order with Sort.</li></ul>
+     <li>Suppliers are sorted nearest to ${esc(REFS[state.ref].s)} first. Change the order with Sort.</li>
+     <li><b>Most supplied:</b> ${ranked.slice(0,3).map(c=>`${esc(c.n)} (${capCount(c.k)})`).join(", ")}. <b>Fewest:</b> ${esc(low.n)} (${capCount(low.k)}).</li></ul>
     <h4>Supplier tiers</h4><ul>${tiersIn(CO).map(t=>`<li>${tpill(t)} ${TIERDEF[t]}.</li>`).join("")}</ul>
-    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists.</p></div>
+    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists. ${CO.filter(d=>d.statement).length} of ${CO.length} suppliers have a capability statement; look for the <b>Statement</b> link on their row.</p></div>
    <div class="acol"><h4>Glossary</h4><dl class="gloss">${gl.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></div>`;
 }
 
@@ -954,7 +973,7 @@ sClr.onclick=()=>{clearSearch();sIn.focus();};
 document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) closeSearch();});
 
 /* ---------- reset ---------- */
-$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(),openSup:new Set(),view:"cut"});renderAll();$("#resetbtn").focus();};
+$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();$("#resetbtn").focus();};
 
 
 function stampFooter(){
@@ -1004,6 +1023,7 @@ init();
     var cap=t.closest(".cap"); if(cap){ track("capability_select",{last_capability:cap.dataset.k}); success(); return; }
     var zone=t.closest(".zone,.zb,.zbtn,.zonelist details>summary"); if(zone){ var zd=zone.dataset.z||(zone.parentNode&&zone.parentNode.dataset&&zone.parentNode.dataset.z)||""; track("zone_select",{last_zone:zd}); success(); return; }
     var chip=t.closest(".chip2"); if(chip){ track(chip.dataset.k?"capability_select":"zone_select",chip.dataset.k?{last_capability:chip.dataset.k}:{last_zone:chip.dataset.z}); success(); return; }
+    var stmt=t.closest(".stmt,.profile a[href*=\"box.com\"]"); if(stmt){ track("statement_open"); success(); return; }
     var link=t.closest(".profile a[href]"); if(link){ track("website_link_click"); success(); return; }
     var co=t.closest(".cobtn"); if(co){ if(co.getAttribute("aria-expanded")!=="true") track("company_detail_view"); success(); return; }
     var vb=t.closest(".seg button"); if(vb){ track("view_"+vb.dataset.view); return; }
