@@ -127,7 +127,7 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
   /* 7. reset clears the highlight */
   await page.click("#resetbtn"); await sleep(400);
   const clr = (await mlog(page)).filter(x => x.op === "clear");
-  check(clr.length >= 1 && clr.at(-1).sheet === "Supplier Map", "Reset clears the map selection");
+  check(clr.some(x => x.sheet === "Supplier Map") && clr.some(x => x.sheet === "Sector Bars"), "Reset clears the map and the sector bar", JSON.stringify(clr.slice(-2)));
   check((await status(page)).startsWith("Linked to the search box"), "status returns to idle after reset");
 
   /* 8. searching a sector or capability does not touch the viz */
@@ -139,7 +139,10 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
   await page.waitForSelector('#sresults a[aria-label^="Industry sector:"]', { timeout: 5000 });
   await page.click('#sresults a[aria-label^="Industry sector:"]'); await sleep(400);
   const extra = (await mlog(page)).slice(n0).filter(x => x.op === "select");
-  check(extra.length === 0, "choosing a capability or sector result does not change the dashboard");
+  check(extra.length === 1 && extra[0].sheet === "Sector Bars" && extra[0].value[0] === "Advanced Manufacturing",
+        "a capability result leaves the dashboard alone; a sector result selects its bar", JSON.stringify(extra));
+  await sleep(400);
+  check((await status(page)).startsWith("Highlighted Advanced Manufacturing in the dashboard's sector chart"), "the bar's own selection event is not read back as a click", await status(page));
   check(errors.length === 0, "no page errors in the main run", errors.join(" | "));
   await page.close(); }
 
@@ -236,6 +239,74 @@ for (const [cfg, label] of [[{ apiFail: true }, "API library fails to load"], [{
   await page.click("#tablink .tablinkgo"); await sleep(900);
   const pos = await page.evaluate(() => Math.round(document.getElementById("capinfo").getBoundingClientRect().top));
   check(pos >= -5 && pos < 120, "stacked layout: Go to it scrolls to the details", `details top ${pos}px`);
+  await page.close(); }
+
+/* 18. sector list -> company -> back -> bar cleared */
+{ const { page, errors } = await open();
+  await waitReady(page); await sleep(300);
+  const S = "Optics & Photonics";
+  await viz(page, n => document.querySelector("tableau-viz")._userClick("Sector Bars", [n]), S); await sleep(500);
+  check((await shown(page)) === S, "bar click lists the sector");
+  // remember a scroll position in the list, then open a company from it
+  await page.evaluate(() => { const b = document.getElementById("capinfo"); b.scrollTop = 120; });
+  const scrolled = await page.evaluate(() => document.getElementById("capinfo").scrollTop);
+  const n0 = (await mlog(page)).length;
+  const name = await page.evaluate(() => document.querySelectorAll("#capinfo .conav")[2].firstChild.textContent);
+  await page.evaluate(() => document.querySelectorAll("#capinfo .conav")[2].click()); await sleep(600);
+  const after = (await mlog(page)).slice(n0);
+  const co = await page.evaluate(() => ({ h3: document.querySelector("#capinfo h3")?.textContent, eyebrow: document.querySelector("#capinfo .eyebrow")?.textContent,
+    back: document.getElementById("backbtn")?.textContent.trim(), focus: document.activeElement?.tagName }));
+  check(co.h3 === name && /company/i.test(co.eyebrow), "a company name in the sector list opens its details", JSON.stringify(co));
+  check(after.some(x => x.op === "select" && x.sheet === "Supplier Map" && x.value[0] === name) && !after.some(x => x.sheet === "Sector Bars"),
+        "it highlights the company on the map and leaves the sector bar selected", JSON.stringify(after));
+  check(co.back === `← Back to ${S} suppliers`, "a Back button names the sector list", co.back);
+  check((await shown(page)) === name && (await page.evaluate(() => window.SCAN.hasSelection)), "page is not reset by the map selection's own events");
+  // back to the list
+  const n1 = (await mlog(page)).length;
+  await page.click("#backbtn"); await sleep(600);
+  const bk = await page.evaluate(() => ({ h3: document.querySelector("#capinfo h3")?.textContent, scroll: document.getElementById("capinfo").scrollTop, back: !!document.getElementById("backbtn") }));
+  const after2 = (await mlog(page)).slice(n1);
+  check(bk.h3 === S && !bk.back, "Back returns to the sector list", JSON.stringify(bk));
+  check(Math.abs(bk.scroll - scrolled) < 2, "Back restores the list's scroll position", `${scrolled} -> ${bk.scroll}`);
+  check(after2.some(x => x.op === "clear" && x.sheet === "Supplier Map") && after2.some(x => x.op === "select" && x.sheet === "Sector Bars" && x.value[0] === S),
+        "Back clears the company highlight and keeps the bar selected", JSON.stringify(after2));
+  // open a company again, then click the bar again to deselect it in Tableau
+  await page.evaluate(() => document.querySelectorAll("#capinfo .conav")[0].click()); await sleep(1800);
+  const n2 = (await mlog(page)).length;
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", [])); await sleep(600);
+  const rs = await page.evaluate(() => ({ h3: document.querySelector("#capinfo h3")?.textContent, sel: window.SCAN.hasSelection }));
+  const after3 = (await mlog(page)).slice(n2);
+  check(rs.h3 === "No selection yet" && !rs.sel, "clicking the bar again resets the details panel", JSON.stringify(rs));
+  check(after3.some(x => x.op === "clear" && x.sheet === "Supplier Map"), "and clears the company highlight on the map", JSON.stringify(after3));
+  check((await status(page)).startsWith("Sector cleared in the dashboard"), "status says why the panel reset", await status(page));
+  const cl = await page.evaluate(() => (window.clarity && window.clarity.q || []).filter(a => a[1] === "tableau_sector_clear" || a[1] === "sector_list_company_open").map(a => a[1]));
+  check(cl.includes("tableau_sector_clear") && cl.includes("sector_list_company_open"), "list opens and bar clears are logged", JSON.stringify(cl));
+  // a company from search clears a selected bar, and the page's own clear does not reset the page
+  await viz(page, n => document.querySelector("tableau-viz")._userClick("Sector Bars", [n]), S); await sleep(1800);
+  const n3 = (await mlog(page)).length;
+  await page.$eval("#dsearch", e => { e.value = ""; }); await page.click("#dsearch"); await page.type("#dsearch", "Applied Mat");
+  await page.waitForSelector("#sopt0"); await page.click("#sopt0"); await sleep(700);
+  const after4 = (await mlog(page)).slice(n3);
+  check(after4.findIndex(x => x.op === "clear" && x.sheet === "Sector Bars") >= 0 &&
+        after4.findIndex(x => x.op === "clear" && x.sheet === "Sector Bars") < after4.findIndex(x => x.op === "select" && x.sheet === "Supplier Map"),
+        "a company from search clears the bar before highlighting the map", JSON.stringify(after4));
+  check((await shown(page)) === "Applied Materials", "the page's own bar clear does not reset the panel", await shown(page));
+  // picking a capability drops the Back link
+  await page.evaluate(() => { document.querySelector("#caps details.capgroup").open = true; });
+  await page.click('#caps [data-k="cnc"]'); await sleep(400);
+  check(!(await page.evaluate(() => window.SCAN.hasSelection && document.getElementById("backbtn"))), "a capability pick leaves no Back link");
+  // keyboard: sector rows are buttons and Back takes focus to the heading
+  check(errors.length === 0, "no page errors in the sector flow", errors.join(" | "));
+  await page.close(); }
+
+/* 19. a sector chosen before the dashboard is ready is applied when it loads */
+{ const { page } = await open({ delay: 3000 });
+  await page.waitForFunction(() => window.SCAN?.ready, { timeout: 10000 });
+  await page.$eval("#dsearch", e => { e.value = ""; }); await page.click("#dsearch"); await page.type("#dsearch", "Advanced Manu");
+  await page.waitForSelector('#sresults a[aria-label^="Industry sector:"]'); await page.click('#sresults a[aria-label^="Industry sector:"]');
+  await waitReady(page); await sleep(600);
+  const sel = (await mlog(page)).filter(x => x.op === "select" && x.sheet === "Sector Bars");
+  check(sel.length === 1 && sel[0].value[0] === "Advanced Manufacturing", "a sector chosen early is highlighted once the dashboard loads", JSON.stringify(sel));
   await page.close(); }
 console.log(`\n${pass} passed, ${fail} failed`);
 await browser.close();

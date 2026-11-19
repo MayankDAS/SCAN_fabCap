@@ -581,6 +581,12 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   .q-fab #listview{flex:1;min-height:0;overflow:auto}
   .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
 }
+/* Sector lists: names open the company; back link from a company to its sector list */
+.cobtn.conav{gap:4px}
+.cobtn .navarrow{font-weight:700;color:var(--accent);text-decoration:none;display:inline-block;margin-left:2px}
+.backbtn{align-self:flex-start;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 12px;font:700 14px var(--body);cursor:pointer}
+.backbtn:hover{filter:brightness(1.05)}
+.backbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 /* ===== Feedback pass ===== */
 .capgroup .cap:hover{background:var(--soft)}
 .sresults .sicon,.sicon.k1,.sicon.k2,.sicon.k3{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
@@ -640,7 +646,7 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
     <section class="panel q-tab" aria-labelledby="h-tab">
       <div class="phead"><h2 id="h-tab">Tech Hub supplier ecosystem overview</h2>
         <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="howto-tab"><span aria-hidden="true">?</span> How to use</button></div></div>
-    <p class="howto" id="howto-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. Choosing a company in the search box highlights it here. Clicking a single company here shows its details in the search panel, and clicking an industry sector bar lists that sector's suppliers there.</span></p>
+    <p class="howto" id="howto-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. Choosing a company in the search box highlights it here. Clicking a single company here shows its details in the search panel, and clicking an industry sector bar lists that sector's suppliers there; click the bar again to clear it and reset the panel. Choosing a sector in the search box highlights its bar.</span></p>
     <div class="tabwrap" role="region" aria-label="Tableau Public dashboard: Tech Hub supplier ecosystem overview"><div id="viz1795017713550" class="tabhost"><p class="tabloading">Loading the Tableau Public dashboard…</p><noscript><p class="tabloading"><a href="https://public.tableau.com/shared/58GF35NYY">Open the dashboard on Tableau Public</a></p></noscript></div></div>
     <p class="tablink" id="tablink" role="status" aria-live="polite" hidden></p>
     <details class="tabdebug" id="tabdebug" hidden><summary>Link diagnostics</summary><div></div></details>
@@ -870,6 +876,8 @@ const SORTS=[["dist",()=>`Distance to ${REFS[state.ref].s}`],["ny",()=>"New York
 /* One supplier row, used by both the results panel and the List view */
 function supRow(d,ctx){
   const pid=`p${ctx}${d.id}`, key=`${ctx}:${d.id}`, open=state.openSup.has(key), ref=REFS[state.ref];
+  if(ctx==="s") return `<li class="srow"><button type="button" class="cobtn conav" data-id="${d.id}">${esc(d.n)}<span class="navarrow" aria-hidden="true">›</span><span class="sr"> (opens company details and highlights it on the dashboard map)</span></button>
+    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${stmtBadge(d)}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div></li>`;
   return `<li class="srow"><button type="button" class="cobtn" data-key="${key}" aria-expanded="${open}" aria-controls="${pid}"><span class="caret" aria-hidden="true">▶</span>${esc(d.n)}</button>
     <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${stmtBadge(d)}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div>
     <div class="profile" id="${pid}"${open?"":" hidden"}>${profile(d)}</div></li>`;}
@@ -884,11 +892,15 @@ function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+"
    ${d.prim.length?`<dt>Primary</dt><dd>${d.prim.map(esc).join("; ")}</dd>`:""}
    ${d.sec.length?`<dt>Also does</dt><dd>${d.sec.map(esc).join("; ")}</dd>`:""}
    <dt>Fab capability</dt><dd>${d.c.length?d.c.map(k=>esc(CAPN[k]||k)).join("; "):"Not mapped to a fab capability"}</dd></dl>`;}
-function bindRows(root){root.querySelectorAll(".cobtn").forEach(b=>b.onclick=()=>{const key=b.dataset.key, open=b.getAttribute("aria-expanded")!=="true";
+function bindRows(root){
+  root.querySelectorAll(".conav").forEach(b=>b.onclick=()=>{
+    try{ if(window.clarity) window.clarity("event","sector_list_company_open"); }catch(e){}
+    openCompany(+b.dataset.id,{source:"sectorlist"}); focusDetails();});
+  root.querySelectorAll(".cobtn:not(.conav)").forEach(b=>b.onclick=()=>{const key=b.dataset.key, open=b.getAttribute("aria-expanded")!=="true";
   open?state.openSup.add(key):state.openSup.delete(key); b.setAttribute("aria-expanded",open); document.getElementById(b.getAttribute("aria-controls")).hidden=!open;});}
 
 function select(cap,zone,opts={}){
-  state.cap=cap; state.zone=zone; state.coSel=null; state.sector=null;
+  state.cap=cap; state.zone=zone; state.coSel=null; state.sector=null; state.back=null;
   if(cap) state.closed.delete(CAP_GROUPS.findIndex(G=>G.k.includes(cap)));
   renderCaps(); renderZones(); renderCapInfo(); if(!opts.keepList) renderZoneList();
   if(!opts.noScroll){ if(FIT_MQ.matches) revealDetails();
@@ -956,16 +968,17 @@ document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.view=b.
 /* ---------- results panel ---------- */
 const tierLine=()=>`<p class="tierline" aria-label="Tier key">${tiersIn(CO).map(t=>`<span>${tpill(t)} ${TSHORT[t]}</span>`).join("")}</p>`;
 const tierCounts=arr=>tiersIn(arr).map(t=>`${arr.filter(d=>d.t===t).length} ${TIERN[t]}`).join(" · ");
-function supplierBlock(arr){
+function supplierBlock(arr,ctx="r"){
   const ny=arr.filter(isNY).length;
   const st=arr.filter(d=>d.statement).length;
   return `<div class="suptools"><span>${ny} of ${arr.length} in New York · ${st} with a statement</span><label class="stmtfilter"><input type="checkbox" id="stmtonly"${state.stmtOnly?" checked":""}${st?"":" disabled"}> Only suppliers with a capability statement</label><label>Sort <select id="supsort">${SORTS.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${esc(l())}</option>`).join("")}</select></label></div>
-    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,"r")).join("")}</ul>`;}
+    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,ctx)).join("")}</ul>`;}
 function renderCapInfo(){
   const el=$("#capinfo");
   if(state.coSel!=null){
     const d=CO[state.coSel], zs=activeZones().sort((a,b)=>ZNUM[a]-ZNUM[b]);
-    el.innerHTML=`<div class="ihead"><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)}</h3>
+    const bk=state.back?`<button type="button" class="backbtn" id="backbtn"><span aria-hidden="true">←</span> Back to ${esc(state.back.sector)} suppliers</button>`:"";
+    el.innerHTML=bk+`<div class="ihead"><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)}</h3>
       <div class="l2" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${sited(d)?`<span>${distTxt(d)} from ${esc(REFS[state.ref].s)}</span>`:""}</div>
       <p class="help">${esc(d.s)}${d.prim.length?" · "+d.prim.map(esc).join("; "):""}</p></div>
       <div class="where"><span>Fab capabilities:</span>${d.c.length?d.c.map(k=>`<button type="button" class="chip2" data-k="${k}">${esc(CAPN[k])}</button>`).join(""):`<span class="nodata">Not mapped to a fab capability, so no zone lights up.</span>`}</div>
@@ -974,7 +987,7 @@ function renderCapInfo(){
   } else if(state.sector){
     const arr=CO.filter(d=>d.s===state.sector);
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Industry sector</div><h3 tabindex="-1">${esc(state.sector)}</h3><p class="meta">${arr.length} suppliers · ${tierCounts(arr)}</p></div>
-      ${supplierBlock(arr)}`;
+      ${supplierBlock(arr,"s")}`;
   } else if(state.cap){
     const c=CAPS.find(x=>x.k===state.cap), arr=CO.filter(d=>d.c.includes(c.k));
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Capability</div><h3 tabindex="-1">${esc(c.n)}</h3><p class="help">${esc(CAP_HELP[c.k])}</p><p class="meta">${arr.length} suppliers · ${tierCounts(arr)}</p></div>
@@ -992,6 +1005,7 @@ function renderCapInfo(){
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
   bindRows(el);
   const ss=el.querySelector("#supsort"); if(ss) ss.onchange=e=>{state.sort=e.target.value;renderCapInfo();renderZoneList();el.querySelector("#supsort").focus();};
+  const bb=el.querySelector("#backbtn"); if(bb) bb.onclick=()=>{const b=state.back; openSector(b.sector,{source:"back",scroll:b.scroll}); focusDetails();};
   const so=el.querySelector("#stmtonly"); if(so) so.onchange=e=>{state.stmtOnly=e.target.checked;renderCapInfo();renderZoneList();el.querySelector("#stmtonly").focus();};
 }
 
@@ -1059,23 +1073,35 @@ document.querySelectorAll(".infobtn").forEach(b=>b.addEventListener("click",()=>
   const open=b.getAttribute("aria-expanded")!=="true"; b.setAttribute("aria-expanded",String(open)); t.hidden=!open;}));
 function openCompany(id,opts={}){
   if(!CO[id]) return false;
-  Object.assign(state,{cap:null,zone:null,coSel:id,sector:null}); state.openSup.clear();
+  /* Reached from a sector list (or from another company that was): offer a way back to that list. */
+  const back=state.sector?{sector:state.sector,scroll:$("#capinfo").scrollTop}:(state.coSel!=null?state.back:null);
+  Object.assign(state,{cap:null,zone:null,coSel:id,sector:null,back}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
   if(FIT_MQ.matches) revealDetails();
-  document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page"}}));
+  document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page",
+    keepSector:!!(back&&CO[id].s===back.sector)}}));
   return true;
 }
 /* Open one industry sector's supplier list in the details panel. Used by the
    search box and by clicks on a sector in the Tableau dashboard. */
 function openSector(name,opts={}){
   if(!CO.some(d=>d.s===name)) return false;
-  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name}); state.openSup.clear();
+  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name,back:null}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
   if(FIT_MQ.matches) revealDetails();
+  if(opts.scroll!=null) $("#capinfo").scrollTop=opts.scroll;     // back to where the list was
   document.dispatchEvent(new CustomEvent("scan:sector",{detail:{name,source:opts.source||"page"}}));
   return true;
 }
-window.SCAN={openCompany,openSector,get ready(){return CO.length>0;},get companies(){return CO;},
+/* Empty the details panel, as when the dashboard's sector selection is cleared. */
+function clearSelection(opts={}){
+  Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,back:null}); state.openSup.clear();
+  renderAll(); $("#capinfo").scrollTop=0;
+  document.dispatchEvent(new CustomEvent("scan:cleared",{detail:{source:opts.source||"page"}}));
+}
+function focusDetails(){const h=$("#capinfo h3"); if(h) h.focus({preventScroll:true});}
+window.SCAN={openCompany,openSector,clearSelection,get ready(){return CO.length>0;},get companies(){return CO;},
+  get hasSelection(){return state.coSel!=null||!!state.sector||!!state.cap||!!state.zone;},
   get sectors(){return [...new Set(CO.map(d=>d.s).filter(Boolean))];}};
 function openResult(n){
   const it=sItems[n]; if(!it) return;
@@ -1101,7 +1127,7 @@ sClr.onclick=()=>{clearSearch();sIn.focus();};
 document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) closeSearch();});
 
 /* ---------- reset ---------- */
-$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
+$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,back:null,sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
 
 
 function stampFooter(){
@@ -1206,6 +1232,9 @@ let targets = [];                       // worksheets that carry a company field
 let sectorTargets = [];                 // worksheets that carry an industry sector field
 let pending = null;                     // a company chosen before the dashboard was ready
 let echo = { value: null, until: 0 };   // our own highlight, so its event is ignored
+let echoSector = { value: null, until: 0 };   // our own sector highlight
+let quietUntil = 0;                     // our own clears raise empty selection events; ignore them briefly
+let pendingSector = null;               // a sector chosen before the dashboard was ready
 
 /* ---------- size, mirroring the standard Tableau embed snippet ---------- */
 function heightFor() { const w = host.offsetWidth || 1000; return w > 500 ? Math.round(w * 0.75) : 1827; }
@@ -1335,6 +1364,7 @@ function link() {
   }
   say(sectorTargets.length ? IDLE_SECTORS : IDLE);
   if (pending !== null) { const p = pending; pending = null; highlight(p); }
+  if (pendingSector !== null) { const p = pendingSector; pendingSector = null; highlightSector(p); }
 }
 
 function primary() {
@@ -1343,15 +1373,26 @@ function primary() {
 }
 
 /* ---------- page to viz ---------- */
-async function highlight(id) {
+/* The sheet that shows sectors on their own, such as the industry bar chart. */
+function sectorPrimary() {
+  const only = sectorTargets.filter(t => !targets.some(c => c.ws.name === t.ws.name));
+  return only.find(t => /bar|sector|industr/i.test(t.ws.name)) || only[0] || null;
+}
+async function quietly(fn) { quietUntil = Date.now() + 1500; try { await fn(); } finally { quietUntil = Date.now() + 1500; } }
+
+async function highlight(id, opts = {}) {
   if (failed) return;
   if (!ready || !window.SCAN || !window.SCAN.ready) { pending = id; return; }
   const t = primary(); if (!t) return;
   const d = window.SCAN.companies[id]; if (!d) return;
   const v = t.toViz.get(id);
+  // A company from search may sit outside a sector the bar chart is filtering the map to,
+  // so clear the bar first. A company picked from that sector's own list keeps it.
+  const sp = sectorPrimary();
+  if (sp && !opts.keepSector) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
   try {
     if (v === undefined) {
-      await t.ws.clearSelectedMarksAsync();
+      await quietly(() => t.ws.clearSelectedMarksAsync());
       say(`<b>${escH(d.n)}</b> isn't in the dashboard, so nothing is highlighted there.`, "muted");
       return;
     }
@@ -1363,13 +1404,39 @@ async function highlight(id) {
     say(`Couldn't highlight <b>${escH(d.n)}</b> in the dashboard (${escH(e.message)}).`, "muted");
   }
 }
-async function clearAll() {
-  pending = null;
+async function clearAll(message) {
+  pending = null; pendingSector = null;
   if (!ready || failed) return;
-  const t = primary(); if (!t) { if (sectorTargets.length) say("Click an industry sector in the dashboard to list its suppliers in the search panel.", "muted"); return; }
+  const t = primary(), sp = sectorPrimary();
   echo = { value: null, until: Date.now() + 3000 };
-  try { await t.ws.clearSelectedMarksAsync(); } catch (e) { log("clear failed", e); }
+  if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear failed", e); } }
+  if (sp && message === undefined) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
+  if (message) { say(message, "muted"); return; }
+  if (!t) { if (sectorTargets.length) say("Click an industry sector in the dashboard to list its suppliers in the search panel.", "muted"); return; }
   say(sectorTargets.length ? IDLE_SECTORS : IDLE);
+}
+
+/* ---------- page to viz: sectors ---------- */
+async function highlightSector(name) {
+  if (failed) return;
+  if (!ready || !window.SCAN || !window.SCAN.ready) { pendingSector = name; return; }
+  const sp = sectorPrimary(); if (!sp) return;
+  let v; for (const [val, n] of sp.toPage) if (n === name) { v = val; break; }
+  const t = primary();
+  if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }   // the sector replaces any company
+  try {
+    if (v === undefined) {
+      await quietly(() => sp.ws.clearSelectedMarksAsync());
+      say(`<b>${escH(name)}</b> isn't in the dashboard's sector chart, so nothing is highlighted there.`, "muted");
+      return;
+    }
+    echoSector = { value: v, until: Date.now() + 3000 };
+    await sp.ws.selectMarksByValueAsync([{ fieldName: sp.field, value: [v] }], api.SelectionUpdateType.Replace);
+    say(`Highlighted <b>${escH(name)}</b> in the dashboard's sector chart.`);
+  } catch (e) {
+    log("sector highlight failed on", sp.ws.name, e);
+    say(`Couldn't highlight <b>${escH(name)}</b> in the dashboard (${escH(e.message)}).`, "muted");
+  }
 }
 
 /* ---------- viz to page ---------- */
@@ -1384,7 +1451,11 @@ async function onMarks(ev) {
   if (!t && !st) return;
   let table;
   try { table = (await ev.detail.getMarksAsync()).data[0]; } catch (e) { log("could not read marks", e); return; }
-  if (!table || !table.data.length) return;                  // selection cleared
+  if (!table || !table.data.length) {                        // selection cleared
+    const sp = sectorPrimary();
+    if (sp && st === sp && Date.now() >= quietUntil) onSectorCleared();
+    return;
+  }
   const values = t ? colValues(table, t.field) : [];
   if (!values.length) { if (st) onSector(colValues(table, st.field), st); return; }   // no company in the marks: a sector bar
   if (values.length === 1 && echo.value === values[0] && Date.now() < echo.until) return;   // our own highlight
@@ -1395,8 +1466,15 @@ async function onMarks(ev) {
   window.SCAN.openCompany(d.id, { source: "tableau" });
   say(`Showing <b>${escH(d.n)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
 }
+function onSectorCleared() {
+  track("tableau_sector_clear");
+  if (!window.SCAN.hasSelection) { say(IDLE_SECTORS); return; }
+  window.SCAN.clearSelection({ source: "tableau" });
+  clearAll("Sector cleared in the dashboard, so the details panel was reset.");   // also drops the company highlight on the map
+}
 function onSector(values, st) {
   if (!values.length) return;
+  if (values.length === 1 && echoSector.value === values[0] && Date.now() < echoSector.until) return;   // our own sector highlight
   if (values.length > 1) { say(`${values.length} sectors are selected in the dashboard. Click a single sector to list its suppliers.`, "muted"); return; }
   const v = values[0], name = st.toPage.get(v);
   track("tableau_sector_click", { tableau_sector: v });
@@ -1432,10 +1510,11 @@ function debugPanel(reason) {
 }
 
 /* ---------- wire up ---------- */
-document.addEventListener("scan:company", e => { if (e.detail && e.detail.source !== "tableau") highlight(e.detail.id); });
-document.addEventListener("scan:reset", clearAll);
+document.addEventListener("scan:company", e => { if (e.detail && e.detail.source !== "tableau") highlight(e.detail.id, { keepSector: e.detail.keepSector }); });
+document.addEventListener("scan:sector", e => { if (e.detail && e.detail.source !== "tableau") highlightSector(e.detail.name); });
+document.addEventListener("scan:reset", () => clearAll());
 document.addEventListener("scan:dataready", link);
-window.SCANLink = { get state() { return { ready, failed, pending, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })),
+window.SCANLink = { get state() { return { ready, failed, pending, pendingSector, sectorSheet: sectorPrimary() ? sectorPrimary().ws.name : null, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })),
   sectorTargets: sectorTargets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })), report }; } };
 if (host) start();
 </script>
