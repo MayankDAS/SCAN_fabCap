@@ -520,11 +520,12 @@ footer{font-size:14.5px}
 .tabdebug table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12.5px}
 .tabdebug th,.tabdebug td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
 
-/* ===== Layout 2.1: one screen dashboard =====
+/* ===== Layout 2.2: dashboard grid =====
    Hero on top, then a 2 by 2 grid: search with the details panel beside the
    Tableau dashboard, and the fab cutaway beside the capability groups.
-   From 1100px wide and 600px tall the hero and all four panels fit the
-   window and each panel scrolls on its own; smaller screens stack them. */
+   From 1100px wide the top row takes about two thirds of the window height
+   and the bottom row half of it, so the page scrolls a little; each panel
+   scrolls on its own. Smaller screens stack the panels in the same order. */
 [hidden]{display:none!important}
 .fit{display:flex;flex-direction:column;gap:16px}
 .dash{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);grid-template-areas:"search" "tab" "fab" "caps"}
@@ -547,20 +548,25 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
 .wrap{padding-top:16px}   /* the theme button now sits in the hero, so no space is reserved above it */
 @media (min-width:1100px) and (min-height:600px){
   .wrap{max-width:1760px;padding-block:12px 32px;gap:16px}
-  .fit{height:max(720px,calc(100vh - 24px));height:max(720px,calc(100dvh - 24px));gap:12px}
+  .fit{gap:12px}
   header{flex:none;padding:12px 150px 12px 22px;border-radius:16px;align-items:center;gap:10px 24px}
   header h1{font-size:clamp(22px,1.75vw,30px)}
   header .ttl{max-width:none}
   header .themebtn{top:calc(50% - 17px)}
   .sponsors{flex-direction:row;align-items:center;gap:0}
   .sponsors img{height:38px}.sponsors img.ub{height:46px}.sponsors .sep{height:38px}
-  .dash{flex:1;min-height:0;gap:12px;grid-template-columns:minmax(380px,5fr) minmax(0,7fr);
-        grid-template-rows:minmax(0,1.3fr) minmax(0,1fr);grid-template-areas:"search tab" "fab caps"}
+  /* 12 columns: search 5 and Tableau 7 on top, fab 6 and capability groups 6 below */
+  .dash{flex:none;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));
+        grid-template-rows:max(500px,66.7vh) max(440px,50vh);
+        grid-template-rows:max(500px,66.7dvh) max(440px,50dvh);
+        grid-template-areas:"search search search search search tab tab tab tab tab tab tab"
+                            "fab fab fab fab fab fab caps caps caps caps caps caps"}
   .dash>.panel{min-height:0;overflow:hidden;padding:12px 14px;gap:10px;border-radius:16px}
   .dash .phead{flex:none;flex-wrap:nowrap}
   .dash .phead h2,.q-search .phead label{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
   .dash .howto{flex:none;max-height:40%;overflow:auto}
   .q-search .searchbar{flex:none}
+  .q-search .searchhelp{max-height:none;overflow:visible}   /* show the whole help text, never clipped */
   .q-search .capinfo{flex:1;min-height:0;overflow:auto}
   .q-tab .tabwrap{flex:1;min-height:0}
   .q-tab .tabhost{height:100%;aspect-ratio:auto}
@@ -569,11 +575,11 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   .q-tab .tabdebug{flex:none;max-height:35%;overflow:auto;margin:0}
   .q-fab .figcol{flex:1;min-height:0}
   .q-fab #cutview{flex:1;min-height:0;display:flex;gap:12px;container-type:size}
-  .q-fab #cutview .figure{flex:none;height:min(100cqh,calc(100cqw * .66 / 1.3384));width:auto;aspect-ratio:1962/1466}
+  .q-fab #cutview .figure{flex:none;height:min(100cqh,calc((100cqw - 220px) / 1.3384));width:auto;aspect-ratio:1962/1466}   /* 220px kept for the zone list */
   .q-fab #cutview .figure img{width:100%;height:100%}
-  .q-fab .zlegend{flex:1;min-width:0;overflow:auto;margin-top:0!important;padding-right:4px}
+  .q-fab .zlegend{flex:1;min-width:200px;overflow:auto;margin-top:0!important;padding-right:4px}
   .q-fab #listview{flex:1;min-height:0;overflow:auto}
-  .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 250px;padding-right:4px}
+  .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
 }
 </style>
 <div class="wrap">
@@ -599,7 +605,7 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
       <div class="phead"><label id="slbl" for="dsearch">Search the dashboard</label>
         <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="shelp"><span aria-hidden="true">?</span> How to use</button><button type="button" class="resetbtn" id="resetbtn">↺ Reset</button></div></div>
       <div role="search" class="searchbar">
-    <p class="howto searchhelp" id="shelp" hidden>Type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example reverse osmosis or CNC machining) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to jump to its details in the supplier capabilities section.</p>
+    <p class="howto searchhelp" id="shelp" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example reverse osmosis or CNC machining) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to see its details just below the search box.</span></p>
     <div class="sbox">
       <div class="sfield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         <input id="dsearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search companies, capabilities or sectors" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sresults" aria-describedby="shelp">
@@ -848,6 +854,7 @@ function supRow(d,ctx){
     <div class="profile" id="${pid}"${open?"":" hidden"}>${profile(d)}</div></li>`;}
 function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" · ");
   return `<dl>${d.w?`<dt>Website</dt><dd><a href="${esc(d.href)}" target="_blank" rel="noopener">${esc(d.w)}<span class="sr"> (opens in a new tab)</span></a></dd>`:""}
+   ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document<span class="sr"> (opens in a new tab)</span></a></dd>`:""}
    <dt>Address</dt><dd>${esc(d.a||"Not recorded")}${d.maps?` · <a href="${esc(d.maps)}" target="_blank" rel="noopener">map<span class="sr"> (opens in a new tab)</span></a>`:""}</dd>
    <dt>Contact</dt><dd>${d.contact?esc(d.contact):"Via website contact page"}</dd>
    ${sited(d)?`<dt>Distance</dt><dd>${Math.round(miles(ref,d)).toLocaleString()} miles from ${esc(ref.s)}</dd>`:""}
@@ -855,8 +862,7 @@ function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+"
    <dt>Sector</dt><dd>${esc(d.s)}</dd>${d.type?`<dt>Type</dt><dd>${esc(d.type)}</dd>`:""}${where?`<dt>Location</dt><dd>${esc(where)}</dd>`:""}
    ${d.prim.length?`<dt>Primary</dt><dd>${d.prim.map(esc).join("; ")}</dd>`:""}
    ${d.sec.length?`<dt>Also does</dt><dd>${d.sec.map(esc).join("; ")}</dd>`:""}
-   <dt>Fab capability</dt><dd>${d.c.length?d.c.map(k=>esc(CAPN[k]||k)).join("; "):"Not mapped to a fab capability"}</dd>
-   ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document<span class="sr"> (opens in a new tab)</span></a></dd>`:""}</dl>`;}
+   <dt>Fab capability</dt><dd>${d.c.length?d.c.map(k=>esc(CAPN[k]||k)).join("; "):"Not mapped to a fab capability"}</dd></dl>`;}
 function bindRows(root){root.querySelectorAll(".cobtn").forEach(b=>b.onclick=()=>{const key=b.dataset.key, open=b.getAttribute("aria-expanded")!=="true";
   open?state.openSup.add(key):state.openSup.delete(key); b.setAttribute("aria-expanded",open); document.getElementById(b.getAttribute("aria-controls")).hidden=!open;});}
 
@@ -864,7 +870,7 @@ function select(cap,zone,opts={}){
   state.cap=cap; state.zone=zone; state.coSel=null; state.sector=null;
   if(cap) state.closed.delete(CAP_GROUPS.findIndex(G=>G.k.includes(cap)));
   renderCaps(); renderZones(); renderCapInfo(); if(!opts.keepList) renderZoneList();
-  if(!opts.noScroll){ if(FIT_MQ.matches) $("#capinfo").scrollTop=0;
+  if(!opts.noScroll){ if(FIT_MQ.matches) revealDetails();
     else {const r=$("#capinfo").getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) $("#capinfo").scrollIntoView({behavior:"smooth",block:"start"});} }
 }
 function renderAll(){renderCaps();renderZones();renderZoneList();renderCapInfo();renderView();}
@@ -1015,7 +1021,11 @@ function clearSearch(){sIn.value="";sClr.hidden=true;closeSearch();$("#scount").
 /* Open one company in the capabilities section. Used by the search box and by
    clicks in the Tableau dashboard; announces the choice so the dashboard can
    follow it (see the link module at the end of the page). */
-const FIT_MQ=matchMedia("(min-width:1100px) and (min-height:600px)");   /* one screen layout */
+const FIT_MQ=matchMedia("(min-width:1100px) and (min-height:600px)");   /* grid layout */
+/* Grid layout: show the details from the top, and if their heading is off screen
+   (for example after a pick in the bottom row) scroll just enough to show it. */
+function revealDetails(){const box=$("#capinfo"); box.scrollTop=0; const r=box.getBoundingClientRect();
+  if(r.top<0||r.top>innerHeight-140) scrollBy({top:r.top-12,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
 document.querySelectorAll(".infobtn").forEach(b=>b.addEventListener("click",()=>{
   const t=document.getElementById(b.getAttribute("aria-controls")); if(!t) return;
   const open=b.getAttribute("aria-expanded")!=="true"; b.setAttribute("aria-expanded",String(open)); t.hidden=!open;}));
@@ -1023,7 +1033,7 @@ function openCompany(id,opts={}){
   if(!CO[id]) return false;
   Object.assign(state,{cap:null,zone:null,coSel:id,sector:null}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
-  $("#capinfo").scrollTop=0;
+  if(FIT_MQ.matches) revealDetails();
   document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page"}}));
   return true;
 }
@@ -1039,7 +1049,7 @@ function openResult(n){
   closeSearch();
   try{ if(window.clarity){window.clarity("event","search_result_open");window.clarity("set","last_search_type",it.type);} }catch(e){}
   try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path:"ev/search_result_open",title:"search_result_open",event:true}); }catch(e){}
-  const box=$("#capinfo"); if(FIT_MQ.matches) box.scrollTop=0; else box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+  const box=$("#capinfo"); if(FIT_MQ.matches) revealDetails(); else box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
   const h=box.querySelector("h3"); if(h) setTimeout(()=>h.focus({preventScroll:true}),350);
 }
 sIn.addEventListener("input",runSearch);
