@@ -500,29 +500,156 @@ footer{font-size:14.5px}
 .nodata{color:var(--ink2);font-size:14.5px}
 
 /* Sponsor logos, right side of the title band */
-.sponsors{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
-.sponsors .logos{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:14px 22px}
-.sponsors img{height:58px;width:auto;display:block}
-.sponsors img.ub{height:72px}
-.sponsors .sep{width:1px;height:52px;background:rgba(255,255,255,.35)}
-@media (max-width:760px){.sponsors{align-items:flex-start;margin-left:0}.sponsors .logos{justify-content:flex-start}}
-@media (max-width:520px){.sponsors img{height:40px}.sponsors img.ub{height:52px}.sponsors .sep{display:none}}
+.herologos{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
+.herologos .logos{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:14px 22px}
+.herologos img{height:58px;width:auto;display:block}
+.herologos img.ub{height:72px}
+.herologos .sep{width:1px;height:52px;background:rgba(255,255,255,.35)}
+@media (max-width:760px){.herologos{align-items:flex-start;margin-left:0}.herologos .logos{justify-content:flex-start}}
+@media (max-width:520px){.herologos img{height:40px}.herologos img.ub{height:52px}.herologos .sep{display:none}}
+
+/* Tableau dashboard and its link to the page */
+.tabhost{position:relative;min-height:200px}
+.tabhost tableau-viz{display:block;width:100%}
+.tabloading{margin:0;padding:22px;color:#4b5563;font-size:15px}
+.tablink{margin:10px 2px 0;padding:9px 12px;border-radius:10px;font-size:14.5px;line-height:1.45;color:var(--ink);background:var(--panel);border:1px solid var(--line)}
+.tablink.muted{color:var(--muted)}
+.tablink a{color:var(--accent);font-weight:600}
+.tabdebug{margin:10px 2px 0;font-size:13px;color:var(--ink)}
+.tabdebug summary{cursor:pointer;font-weight:600}
+.tabdebug table{border-collapse:collapse;width:100%;margin:8px 0;font-size:12.5px}
+.tabdebug th,.tabdebug td{border:1px solid var(--line);padding:4px 6px;text-align:left;vertical-align:top}
+
+/* ===== Layout 2.2: dashboard grid =====
+   Hero on top, then a 2 by 2 grid: search with the details panel beside the
+   Tableau dashboard, and the fab cutaway beside the capability groups.
+   From 1100px wide the top row takes about two thirds of the window height
+   and the bottom row half of it, so the page scrolls a little; each panel
+   scrolls on its own. Smaller screens stack the panels in the same order. */
+[hidden]{display:none!important}
+.fit{display:flex;flex-direction:column;gap:16px}
+.dash{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);grid-template-areas:"search" "tab" "fab" "caps"}
+.q-search{grid-area:search}.q-tab{grid-area:tab}.q-fab{grid-area:fab}.q-caps{grid-area:caps}
+.q-search .phead label{font:700 18px var(--display);color:var(--ink);display:flex;align-items:center;gap:10px}
+.q-search .phead label::before{content:"";width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));flex:none}
+.searchbar{display:flex;flex-direction:column;gap:10px}
+.q-search .capinfo{position:static;max-height:none;overflow:visible}
+.infobtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink2);border-radius:999px;padding:4px 11px 4px 5px;font:600 13px var(--body);cursor:pointer;white-space:nowrap}
+.infobtn span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12px}
+.infobtn:hover,.infobtn[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
+.infobtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.tabhost{aspect-ratio:4/3}
+.tabhost tableau-viz{display:block;width:100%;height:100%}
+@media (max-width:500px){.tabhost{aspect-ratio:auto;height:1827px}}
+header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
+@media (min-width:761px){header{padding-right:150px}}
+@media (max-width:760px){header{padding-top:58px}}
+.aboutpanel{padding:14px 20px}
+.wrap{padding-top:16px}   /* the theme button now sits in the hero, so no space is reserved above it */
+@media (min-width:1100px) and (min-height:600px){
+  .wrap{max-width:1760px;padding-block:12px 32px;gap:16px}
+  .fit{gap:12px}
+  header{flex:none;padding:12px 150px 12px 22px;border-radius:16px;align-items:center;gap:10px 24px}
+  header h1{font-size:clamp(22px,1.75vw,30px)}
+  header .ttl{max-width:none}
+  header .themebtn{top:calc(50% - 17px)}
+  .herologos{flex-direction:row;align-items:center;gap:0}
+  .herologos img{height:38px}.herologos img.ub{height:46px}.herologos .sep{height:38px}
+  /* 12 columns: search 5 and Tableau 7 on top, fab 6 and capability groups 6 below */
+  .dash{flex:none;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));
+        grid-template-rows:max(500px,66.7vh) max(440px,50vh);
+        grid-template-rows:max(500px,66.7dvh) max(440px,50dvh);
+        grid-template-areas:"search search search search search tab tab tab tab tab tab tab"
+                            "fab fab fab fab fab fab caps caps caps caps caps caps"}
+  .dash>.panel{min-height:0;overflow:hidden;padding:12px 14px;gap:10px;border-radius:16px}
+  .dash .phead{flex:none;flex-wrap:nowrap}
+  .dash .phead h2,.q-search .phead label{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .dash .howto{flex:none;max-height:40%;overflow:auto}
+  .q-search .searchbar{flex:none}
+  .q-search .searchhelp{max-height:none;overflow:visible}   /* show the whole help text, never clipped */
+  .q-search .capinfo{flex:1;min-height:0;overflow:auto}
+  .q-tab .tabwrap{flex:1;min-height:0}
+  .q-tab .tabhost{height:100%;aspect-ratio:auto}
+  .q-tab .tablink{flex:none;margin:0;padding:5px 10px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .q-tab .tablinkgo{display:none}
+  .q-tab .tabdebug{flex:none;max-height:35%;overflow:auto;margin:0}
+  .q-fab .figcol{flex:1;min-height:0}
+  .q-fab #cutview{flex:1;min-height:0;display:flex;gap:12px;container-type:size}
+  .q-fab #cutview .figure{flex:none;height:min(100cqh,calc((100cqw - 220px) / 1.3384));width:auto;aspect-ratio:1962/1466}   /* 220px kept for the zone list */
+  .q-fab #cutview .figure img{width:100%;height:100%}
+  .q-fab .zlegend{flex:1;min-width:200px;overflow:auto;margin-top:0!important;padding-right:4px}
+  .q-fab #listview{flex:1;min-height:0;overflow:auto}
+  .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
+}
+/* Sponsor logos link to their sites. The class names avoid the word "sponsor": ad blockers hide
+   elements named like .herolink or .herologos, which made both logos disappear for their users. */
+.herolink{display:block;flex:none;line-height:0;border-radius:8px;transition:opacity .15s,transform .15s}
+/* Logos are sized by height, so the global img{max-width:100%} is lifted for them. */
+.herologos img{max-width:none}
+.herolink:hover{opacity:.85;transform:translateY(-1px)}
+.herolink:focus-visible{outline:2px solid #fff;outline-offset:4px}
+/* "How to use" cards float over their panel instead of taking space in it */
+.dash>.panel{position:relative}
+.dash .howto.helppop{position:absolute;right:14px;z-index:50;width:max-content;max-width:min(480px,calc(100% - 28px));
+  max-height:none;overflow:visible;margin:0;padding:11px 38px 11px 13px;font-size:14.5px;line-height:1.5;
+  background:linear-gradient(var(--accent-soft),var(--accent-soft)),var(--panel);border:1px solid var(--accent);border-left-width:5px;
+  box-shadow:0 18px 40px -12px rgba(10,40,100,.45)}
+.dash .howto.helppop::before{content:"";position:absolute;top:-8px;right:var(--arrow,24px);width:14px;height:14px;transform:rotate(45deg);
+  background:linear-gradient(var(--accent-soft),var(--accent-soft)),var(--panel);border-top:1px solid var(--accent);border-left:1px solid var(--accent)}
+.helpclose{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;border-radius:7px;background:transparent;color:var(--ink2);font-size:14px;line-height:1;cursor:pointer}
+.helpclose:hover{background:var(--panel);color:var(--ink)}
+.helpclose:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+/* Sector lists: names open the company; back link from a company to its sector list */
+.cobtn.conav{gap:4px}
+.cobtn .navarrow{font-weight:700;color:var(--accent);text-decoration:none;display:inline-block;margin-left:2px}
+.backbtn{align-self:flex-start;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 12px;font:700 14px var(--body);cursor:pointer}
+.backbtn:hover{filter:brightness(1.05)}
+.backbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* ===== Feedback pass ===== */
+.capgroup .cap:hover{background:var(--soft)}
+.sresults .sicon,.sicon.k1,.sicon.k2,.sicon.k3{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.stmt{display:inline-flex;align-items:center;gap:4px;font:700 12.5px/1.4 var(--body);color:var(--accent);border:1px solid currentColor;border-radius:6px;padding:0 6px;text-decoration:none;white-space:nowrap}
+.stmt svg{width:13px;height:13px}
+.stmt:hover{background:var(--accent-soft)}
+.stmt:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.stmtfilter{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.stmtfilter input{width:16px;height:16px;accent-color:var(--accent)}
+.suptools{flex-wrap:wrap}
+/* ===== Collapsible zone groups ===== */
+.zgroup{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.zgroup>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;flex-wrap:wrap}
+.zgroup>summary::-webkit-details-marker{display:none}
+.zgroup>summary:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.zgroup .zgt{font:700 13px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--ink)}
+.zgroup .zgc{display:inline-flex;align-items:center;gap:8px;font:600 14px var(--body);color:var(--ink2)}
+.zgroup .zgc svg{width:16px;height:16px;transition:transform .2s}
+.zgroup[open] .zgc svg{transform:rotate(180deg)}
+.zgroup .zlist{padding:0 12px 12px}
 </style>
 <div class="wrap">
+  <div class="fit">
   <header>
     <div class="ttl"><h1>Supply Chain Activation Network (SCAN) Dashboard 2.0</h1></div>
-    <div class="sponsors" aria-label="Sponsors">
+    <div class="herologos" aria-label="Sponsors">
       <span class="eyebrow"></span>
       <div class="logos">
-        <img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee" width="768" height="198">
+        <a class="herolink" href="https://nysmarticorridor.com/" target="_blank" rel="noopener"><img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee (opens in a new tab)" width="768" height="198"></a>
         <span class="sep" aria-hidden="true"></span>
-        <img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management" width="656" height="240">
+        <a class="herolink" href="https://management.buffalo.edu/centers/center-for-supply-chain-analytics.html" target="_blank" rel="noopener"><img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management (opens in a new tab)" width="656" height="240"></a>
       </div>
     </div>
+    <button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark theme">
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <span id="themelbl">Dark</span></button>
   </header>
-  <section class="panel searchpanel" aria-labelledby="slbl" role="search">
-    <label id="slbl" for="dsearch">Search the dashboard</label>
-    <p class="searchhelp" id="shelp">Type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example reverse osmosis or CNC machining) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to jump to its details in the supplier capabilities section.</p>
+  <main class="dash" id="dash">
+
+    <section class="panel q-search" aria-labelledby="slbl">
+      <div class="phead"><label id="slbl" for="dsearch">Search the dashboard</label>
+        <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="shelp"><span aria-hidden="true">?</span> How to use</button><button type="button" class="resetbtn" id="resetbtn">↺ Reset</button></div></div>
+      <div role="search" class="searchbar">
+    <p class="howto searchhelp" id="shelp" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example reverse osmosis or CNC machining) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to see its details just below the search box.</span></p>
     <div class="sbox">
       <div class="sfield"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         <input id="dsearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search companies, capabilities or sectors" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sresults" aria-describedby="shelp">
@@ -530,22 +657,24 @@ footer{font-size:14.5px}
       <div class="sresults" id="sresults" role="listbox" aria-label="Search results" hidden></div>
     </div>
     <p class="scount sr" id="scount" aria-live="polite"></p>
-  </section>
-  <section class="panel" aria-labelledby="h-tab">
-    <div class="phead"><h2 id="h-tab">Tech Hub supplier ecosystem overview</h2></div>
-    <p class="howto" id="howto-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. The capability section below lists the same suppliers as text.</span></p>
-    <div class="tabwrap" role="region" aria-label="Tableau Public dashboard: Tech Hub supplier ecosystem overview"><div class='tableauPlaceholder' id='viz1795017713550' style='position: relative'><noscript><a href='https://public.tableau.com/shared/58GF35NYY'><img alt='Tech Hub Industries Explorer' src='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;58&#47;58GF35NYY&#47;1_rss.png' style='border: none' /></a></noscript><object class='tableauViz'  style='display:none;'><param name='host_url' value='https%3A%2F%2Fpublic.tableau.com%2F' /> <param name='embed_code_version' value='3' /> <param name='path' value='shared&#47;58GF35NYY' /><param name='toolbar' value='yes' /><param name='static_image' value='https:&#47;&#47;public.tableau.com&#47;static&#47;images&#47;58&#47;58GF35NYY&#47;1.png' /> <param name='animate_transition' value='yes' /><param name='display_static_image' value='yes' /><param name='display_spinner' value='yes' /><param name='display_overlay' value='yes' /><param name='display_count' value='no' /><param name='language' value='en-US' /><param name='filter' value='publish=yes' /></object></div>                <script type='text/javascript'>                    var divElement = document.getElementById('viz1795017713550');                    var vizElement = divElement.getElementsByTagName('object')[0];                    if ( divElement.offsetWidth > 800 ) { vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else if ( divElement.offsetWidth > 500 ) { vizElement.style.width='100%';vizElement.style.height=(divElement.offsetWidth*0.75)+'px';} else { vizElement.style.width='100%';vizElement.style.height='1827px';}                     var scriptElement = document.createElement('script');                    scriptElement.src = 'https://public.tableau.com/javascripts/api/viz_v1.js';                    vizElement.parentNode.insertBefore(scriptElement, vizElement);                </script></div>
-    <p class="sr">Interactive Tableau Public dashboard giving an overview of the Tech Hub supplier ecosystem. It loads from Tableau Public; if it does not load, use the supplier capabilities section below.</p>
-  </section>
+      </div>
+      <section class="capinfo" id="capinfo" aria-live="polite" aria-label="Selected capability and its suppliers"></section>
+    </section>
 
-  <section class="panel" aria-labelledby="h-cap">
-    <div class="phead"><h2 id="h-cap">Supplier capabilities, from the fab's perspective</h2>
-      <div class="hdrtools">
-        <div class="seg" role="group" aria-label="Fab view"><button type="button" data-view="cut" aria-pressed="true">Cutaway</button><button type="button" data-view="list" aria-pressed="false">List</button></div>
-        <button type="button" class="resetbtn" id="resetbtn">↺ Reset</button>
-      </div></div>
-    <p class="howto" id="howto-cap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> pick a capability or a numbered fab zone and its suppliers appear alongside. Switch to <b>List</b> for a text version. Works with Tab, Enter and Space.</span></p>
-    <div class="capgrid">
+    <section class="panel q-tab" aria-labelledby="h-tab">
+      <div class="phead"><h2 id="h-tab">Tech Hub supplier ecosystem overview</h2>
+        <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="howto-tab"><span aria-hidden="true">?</span> How to use</button></div></div>
+    <p class="howto" id="howto-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. Choosing a company in the search box highlights it here. Clicking a single company here shows its details in the search panel, and clicking an industry sector bar lists that sector's suppliers there; click the bar again to clear it and reset the panel. Choosing a sector in the search box highlights its bar.</span></p>
+    <div class="tabwrap" role="region" aria-label="Tableau Public dashboard: Tech Hub supplier ecosystem overview"><div id="viz1795017713550" class="tabhost"><p class="tabloading">Loading the Tableau Public dashboard…</p><noscript><p class="tabloading"><a href="https://public.tableau.com/shared/58GF35NYY">Open the dashboard on Tableau Public</a></p></noscript></div></div>
+    <p class="tablink" id="tablink" role="status" aria-live="polite" hidden></p>
+    <details class="tabdebug" id="tabdebug" hidden><summary>Link diagnostics</summary><div></div></details>
+    <p class="sr">Interactive Tableau Public dashboard giving an overview of the Tech Hub supplier ecosystem. It loads from Tableau Public; if it does not load, use the search box and the capability groups on this page.</p>
+    </section>
+
+    <section class="panel q-fab" aria-labelledby="h-fab">
+      <div class="phead"><h2 id="h-fab">Fab perspective</h2>
+        <div class="hdrtools"><div class="seg" role="group" aria-label="Fab view"><button type="button" data-view="cut" aria-pressed="true">Cutaway</button><button type="button" data-view="list" aria-pressed="false">List</button></div><button type="button" class="infobtn" aria-expanded="false" aria-controls="howto-fab"><span aria-hidden="true">?</span> How to use</button></div></div>
+      <p class="howto" id="howto-fab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span>Pick a numbered fab zone, on the picture or in the zone list, to list its suppliers in the details panel. Switch to <b>List</b> for a text version. Tiers, glossary and data notes are under <b>About this view</b> at the bottom.</span></p>
       <div class="figcol">
         <div id="cutview">
           <figure class="figure" style="margin:0">
@@ -558,18 +687,22 @@ footer{font-size:14.5px}
         </div>
         <div id="listview" hidden><div class="zonelist" id="zonelist"></div></div>
       </div>
+    </section>
+
+    <section class="panel q-caps" aria-labelledby="h-caps">
+      <div class="phead"><h2 id="h-caps">Capability groups</h2>
+        <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="howto-cap"><span aria-hidden="true">?</span> How to use</button></div></div>
+      <p class="howto" id="howto-cap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span>Pick a capability to light up the zones it serves and list its suppliers in the details panel. Tiers, glossary and data notes are under <b>About this view</b> at the bottom.</span></p>
       <nav class="caps" id="caps" aria-label="Capabilities by family" aria-describedby="howto-cap"></nav>
-      <section class="capinfo" id="capinfo" aria-live="polite" aria-label="Selected capability and its suppliers"></section>
-    </div>
+    </section>
+
+  </main>
+  </div>
+  <section class="panel aboutpanel" aria-label="About this dashboard">
     <details class="about"><summary>About this view: tiers, glossary and data</summary><div id="aboutbody"></div></details>
   </section>
   <footer>Fab cutaway: base design by CannonDesign with modifications by Gurkiran Kaur, MS. <span id="datanote">Loading supplier data…</span> Select a supplier name for its full profile.</footer>
 </div>
-
-<button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark theme">
-      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-      <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
-      <span id="themelbl">Dark</span></button>
 <script>
 /* Theme toggle */
 (function(){
@@ -599,6 +732,7 @@ let CO = [], META = {}, FACETS = {};
 function adapt(r, i){
   return {
     id: i,
+    sid: r.id || "",
     n:  r.supplier_name || "Unnamed supplier",
     t:  Number.isInteger(r.tier) ? r.tier : 0,
     tl: r.tier_label || "Unclassified",
@@ -743,7 +877,8 @@ const TSHAPE={1:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" w
               4:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6 .4 5z"/></svg>',
               0:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2"/></svg>'};
 const tpill=t=>`<span class="tpill t${t}">${TSHAPE[t]||""}${esc(TIERN[t]||"Unclassified")}</span>`;
-Object.assign(state,{sort:"dist",closed:new Set(),openSup:new Set(),view:"cut"});
+Object.assign(state,{sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});
+const stmtBadge=d=>d.statement?`<a class="stmt" href="${esc(d.statement)}" target="_blank" rel="noopener" title="Open capability statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Statement<span class="sr"> for ${esc(d.n)} (opens in a new tab)</span></a>`:"";
 
 function loc(d){return [d.city,d.st].filter(Boolean).join(", ")||"Location not recorded";}
 const isNY=d=>d.st==="NY"||/, NY\b/.test(d.a);
@@ -753,17 +888,20 @@ const distTxt=d=>sited(d)?`${Math.round(REFD(d)).toLocaleString()} mi`:"No locat
 function sortSup(arr){
   const byDist=(a,b)=>REFD(a)-REFD(b), byTier=(a,b)=>TORDER.indexOf(a.t)-TORDER.indexOf(b.t)||a.n.localeCompare(b.n);
   const f={dist:byDist,ny:(a,b)=>(isNY(b)-isNY(a))||byDist(a,b),tier:byTier,name:(a,b)=>a.n.localeCompare(b.n)}[state.sort]||byDist;
-  return [...arr].sort(f);}
+  return [...arr].filter(d=>!state.stmtOnly||d.statement).sort(f);}
 const SORTS=[["dist",()=>`Distance to ${REFS[state.ref].s}`],["ny",()=>"New York first"],["tier",()=>"Tier"],["name",()=>"Name"]];
 
 /* One supplier row, used by both the results panel and the List view */
 function supRow(d,ctx){
   const pid=`p${ctx}${d.id}`, key=`${ctx}:${d.id}`, open=state.openSup.has(key), ref=REFS[state.ref];
+  if(ctx==="s") return `<li class="srow"><button type="button" class="cobtn conav" data-id="${d.id}">${esc(d.n)}<span class="navarrow" aria-hidden="true">›</span><span class="sr"> (opens company details and highlights it on the dashboard map)</span></button>
+    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${stmtBadge(d)}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div></li>`;
   return `<li class="srow"><button type="button" class="cobtn" data-key="${key}" aria-expanded="${open}" aria-controls="${pid}"><span class="caret" aria-hidden="true">▶</span>${esc(d.n)}</button>
-    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div>
+    <div class="l2">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${stmtBadge(d)}<span class="dist">${distTxt(d)}${sited(d)?`<span class="sr"> from ${esc(ref.s)}</span>`:""}</span></div>
     <div class="profile" id="${pid}"${open?"":" hidden"}>${profile(d)}</div></li>`;}
 function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" · ");
   return `<dl>${d.w?`<dt>Website</dt><dd><a href="${esc(d.href)}" target="_blank" rel="noopener">${esc(d.w)}<span class="sr"> (opens in a new tab)</span></a></dd>`:""}
+   ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document<span class="sr"> (opens in a new tab)</span></a></dd>`:""}
    <dt>Address</dt><dd>${esc(d.a||"Not recorded")}${d.maps?` · <a href="${esc(d.maps)}" target="_blank" rel="noopener">map<span class="sr"> (opens in a new tab)</span></a>`:""}</dd>
    <dt>Contact</dt><dd>${d.contact?esc(d.contact):"Via website contact page"}</dd>
    ${sited(d)?`<dt>Distance</dt><dd>${Math.round(miles(ref,d)).toLocaleString()} miles from ${esc(ref.s)}</dd>`:""}
@@ -771,16 +909,20 @@ function profile(d){const ref=REFS[state.ref], where=[d.city,d.county?d.county+"
    <dt>Sector</dt><dd>${esc(d.s)}</dd>${d.type?`<dt>Type</dt><dd>${esc(d.type)}</dd>`:""}${where?`<dt>Location</dt><dd>${esc(where)}</dd>`:""}
    ${d.prim.length?`<dt>Primary</dt><dd>${d.prim.map(esc).join("; ")}</dd>`:""}
    ${d.sec.length?`<dt>Also does</dt><dd>${d.sec.map(esc).join("; ")}</dd>`:""}
-   <dt>Fab capability</dt><dd>${d.c.length?d.c.map(k=>esc(CAPN[k]||k)).join("; "):"Not mapped to a fab capability"}</dd>
-   ${d.statement?`<dt>Capability statement</dt><dd><a href="${esc(d.statement)}" target="_blank" rel="noopener">Open document<span class="sr"> (opens in a new tab)</span></a></dd>`:""}</dl>`;}
-function bindRows(root){root.querySelectorAll(".cobtn").forEach(b=>b.onclick=()=>{const key=b.dataset.key, open=b.getAttribute("aria-expanded")!=="true";
+   <dt>Fab capability</dt><dd>${d.c.length?d.c.map(k=>esc(CAPN[k]||k)).join("; "):"Not mapped to a fab capability"}</dd></dl>`;}
+function bindRows(root){
+  root.querySelectorAll(".conav").forEach(b=>b.onclick=()=>{
+    try{ if(window.clarity) window.clarity("event","sector_list_company_open"); }catch(e){}
+    openCompany(+b.dataset.id,{source:"sectorlist"}); focusDetails();});
+  root.querySelectorAll(".cobtn:not(.conav)").forEach(b=>b.onclick=()=>{const key=b.dataset.key, open=b.getAttribute("aria-expanded")!=="true";
   open?state.openSup.add(key):state.openSup.delete(key); b.setAttribute("aria-expanded",open); document.getElementById(b.getAttribute("aria-controls")).hidden=!open;});}
 
 function select(cap,zone,opts={}){
-  state.cap=cap; state.zone=zone; state.coSel=null; state.sector=null;
+  state.cap=cap; state.zone=zone; state.coSel=null; state.sector=null; state.back=null;
   if(cap) state.closed.delete(CAP_GROUPS.findIndex(G=>G.k.includes(cap)));
   renderCaps(); renderZones(); renderCapInfo(); if(!opts.keepList) renderZoneList();
-  if(!opts.noScroll){const r=$("#capinfo").getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) $("#capinfo").scrollIntoView({behavior:"smooth",block:"start"});}
+  if(!opts.noScroll){ if(FIT_MQ.matches) revealDetails();
+    else {const r=$("#capinfo").getBoundingClientRect(); if(r.top<0||r.top>innerHeight*0.6) $("#capinfo").scrollIntoView({behavior:"smooth",block:"start"});} }
 }
 function renderAll(){renderCaps();renderZones();renderZoneList();renderCapInfo();renderView();}
 
@@ -789,7 +931,7 @@ function renderCaps(){
   const max=Math.max(...CAPS.map(c=>capCount(c.k)));
   const ranked=[...CAPS].sort((a,b)=>capCount(b.k)-capCount(a.k)), low=ranked[ranked.length-1];
   const chev='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
-  $("#caps").innerHTML=`<p class="insight"><b>Most supplied:</b> ${ranked.slice(0,3).map(c=>`${esc(c.n)} (${capCount(c.k)})`).join(", ")}. <b>Fewest:</b> ${esc(low.n)} (${capCount(low.k)}).<span class="sr"> The number beside each capability is how many of the ${CO.length} suppliers offer it.</span></p>
+  $("#caps").innerHTML=`<p class="sr">The number beside each capability is how many of the ${CO.length} suppliers offer it.</p>
    <div class="captools"><button type="button" data-all="open">Expand all</button><button type="button" data-all="close">Collapse all</button></div>`+
    CAP_GROUPS.map((G,gi)=>{const sel=G.k.includes(state.cap);
     return `<details class="capgroup fam${gi}" data-g="${gi}"${state.closed.has(gi)?"":" open"}><summary><span class="gt">${esc(G.g)}</span><span class="gd">${esc(G.d)}</span><span class="gc">${G.k.length} items${sel?" · ✓ 1 selected":""}${chev}</span></summary><div class="gbody" role="group" aria-label="${esc(G.g)}">${
@@ -812,9 +954,12 @@ function renderZones(){
     return `<span class="zb${isOn?" on":""}${right?" r":""}" data-z="${k}" style="${pos}" title="${esc(z.n)}">${isOn?`${n}<span class="zbn"> · ${esc(z.n)}</span>`:n}</span>`;}).join("");
   const hl=[...on].sort((a,b)=>ZNUM[a]-ZNUM[b]).map(k=>`zone ${ZNUM[k]}, ${ZONES[k].n}`);
   $("#cutsum").textContent=hl.length?`Highlighted on the cutaway${state.cap?` for ${CAPN[state.cap]}`:""}: ${hl.join("; ")}.`:"No zones highlighted.";
-  $("#zlegend").innerHTML=ZONE_GROUPS.map(G=>`<div class="zgroup"><h4>${esc(G.g)}</h4><ul class="zlist">${
+  const zchev='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  $("#zlegend").innerHTML=ZONE_GROUPS.map((G,gi)=>{const nOn=G.k.filter(k=>on.has(k)).length;
+    return `<details class="zgroup" data-zg="${gi}"${state.zopen.has(gi)?" open":""}><summary><span class="zgt">${esc(G.g)}</span><span class="zgc">${G.k.length} zones${nOn?` · ✓ ${nOn} highlighted`:""}${zchev}</span></summary><ul class="zlist">${
     G.k.map(k=>{const lit=on.has(k)&&state.zone!==k;
-      return `<li><button type="button" class="zbtn${lit?" lit":""}" data-z="${k}" aria-pressed="${state.zone===k}"><b aria-hidden="true">${ZNUM[k]}</b>${esc(ZONES[k].n)}${lit?' <span class="lm" aria-hidden="true">✓</span><span class="sr"> (highlighted)</span>':""}</button></li>`;}).join("")}</ul></div>`).join("");
+      return `<li><button type="button" class="zbtn${lit?" lit":""}" data-z="${k}" aria-pressed="${state.zone===k}"><b aria-hidden="true">${ZNUM[k]}</b>${esc(ZONES[k].n)}${lit?' <span class="lm" aria-hidden="true">✓</span><span class="sr"> (highlighted)</span>':""}</button></li>`;}).join("")}</ul></details>`;}).join("");
+  document.querySelectorAll(".zgroup").forEach(d=>d.addEventListener("toggle",()=>{const g=+d.dataset.zg; d.open?state.zopen.add(g):state.zopen.delete(g);}));
   document.querySelectorAll(".zone,.zb,.zbtn").forEach(r=>r.onclick=()=>{const z=r.dataset.z;select(null,state.zone===z?null:z);});
 }
 
@@ -841,24 +986,26 @@ document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.view=b.
 /* ---------- results panel ---------- */
 const tierLine=()=>`<p class="tierline" aria-label="Tier key">${tiersIn(CO).map(t=>`<span>${tpill(t)} ${TSHORT[t]}</span>`).join("")}</p>`;
 const tierCounts=arr=>tiersIn(arr).map(t=>`${arr.filter(d=>d.t===t).length} ${TIERN[t]}`).join(" · ");
-function supplierBlock(arr){
+function supplierBlock(arr,ctx="r"){
   const ny=arr.filter(isNY).length;
-  return `<div class="suptools"><span>${ny} of ${arr.length} in New York</span><label>Sort <select id="supsort">${SORTS.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${esc(l())}</option>`).join("")}</select></label></div>
-    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,"r")).join("")}</ul>${tierLine()}`;}
+  const st=arr.filter(d=>d.statement).length;
+  return `<div class="suptools"><span>${ny} of ${arr.length} in New York · ${st} with a statement</span><label class="stmtfilter"><input type="checkbox" id="stmtonly"${state.stmtOnly?" checked":""}${st?"":" disabled"}> Only suppliers with a capability statement</label><label>Sort <select id="supsort">${SORTS.map(([v,l])=>`<option value="${v}"${state.sort===v?" selected":""}>${esc(l())}</option>`).join("")}</select></label></div>
+    <ul class="suplist" aria-label="Suppliers. Select a name to open its full profile.">${sortSup(arr).map(d=>supRow(d,ctx)).join("")}</ul>`;}
 function renderCapInfo(){
   const el=$("#capinfo");
   if(state.coSel!=null){
     const d=CO[state.coSel], zs=activeZones().sort((a,b)=>ZNUM[a]-ZNUM[b]);
-    el.innerHTML=`<div class="ihead"><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)}</h3>
+    const bk=state.back?`<button type="button" class="backbtn" id="backbtn"><span aria-hidden="true">←</span> Back to ${esc(state.back.sector)} suppliers</button>`:"";
+    el.innerHTML=bk+`<div class="ihead"><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)}</h3>
       <div class="l2" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${sited(d)?`<span>${distTxt(d)} from ${esc(REFS[state.ref].s)}</span>`:""}</div>
       <p class="help">${esc(d.s)}${d.prim.length?" · "+d.prim.map(esc).join("; "):""}</p></div>
       <div class="where"><span>Fab capabilities:</span>${d.c.length?d.c.map(k=>`<button type="button" class="chip2" data-k="${k}">${esc(CAPN[k])}</button>`).join(""):`<span class="nodata">Not mapped to a fab capability, so no zone lights up.</span>`}</div>
       ${zs.length?"":"<!--"}<div class="where"><span>In the fab at:</span>${zs.map(z=>`<button type="button" class="chip2" data-z="${z}">${ZNUM[z]} · ${esc(ZONES[z].n)}</button>`).join("")}</div>${zs.length?"":"-->"}
-      <div class="profile" style="margin:0">${profile(d)}</div>${tierLine()}`;
+      <div class="profile" style="margin:0">${profile(d)}</div>`;
   } else if(state.sector){
     const arr=CO.filter(d=>d.s===state.sector);
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Industry sector</div><h3 tabindex="-1">${esc(state.sector)}</h3><p class="meta">${arr.length} suppliers · ${tierCounts(arr)}</p></div>
-      ${supplierBlock(arr)}`;
+      ${supplierBlock(arr,"s")}`;
   } else if(state.cap){
     const c=CAPS.find(x=>x.k===state.cap), arr=CO.filter(d=>d.c.includes(c.k));
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Capability</div><h3 tabindex="-1">${esc(c.n)}</h3><p class="help">${esc(CAP_HELP[c.k])}</p><p class="meta">${arr.length} suppliers · ${tierCounts(arr)}</p></div>
@@ -870,12 +1017,14 @@ function renderCapInfo(){
       <div class="where"><span>Capabilities:</span>${caps.map(c=>`<button type="button" class="chip2" data-k="${c.k}">${esc(c.n)}</button>`).join("")}</div>
       ${supplierBlock(arr)}`;
   } else {
-    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>Pick a capability or a fab zone</h3><p class="help">Suppliers will appear here, nearest to ${esc(REFS[state.ref].s)} first, with tier, location and distance. Each name opens a full profile.</p></div>${tierLine()}`;
+    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>No selection yet</h3><p class="help">Companies, industry sectors and capability details appear here upon selection.</p></div>`;
   }
   el.querySelectorAll(".chip2[data-z]").forEach(b=>b.onclick=()=>select(null,b.dataset.z));
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
   bindRows(el);
   const ss=el.querySelector("#supsort"); if(ss) ss.onchange=e=>{state.sort=e.target.value;renderCapInfo();renderZoneList();el.querySelector("#supsort").focus();};
+  const bb=el.querySelector("#backbtn"); if(bb) bb.onclick=()=>{const b=state.back; openSector(b.sector,{source:"back",scroll:b.scroll}); focusDetails();};
+  const so=el.querySelector("#stmtonly"); if(so) so.onchange=e=>{state.stmtOnly=e.target.checked;renderCapInfo();renderZoneList();el.querySelector("#stmtonly").focus();};
 }
 
 /* ---------- About this view ---------- */
@@ -886,12 +1035,14 @@ function renderAbout(){
    ["UPW","Ultrapure water used to rinse wafers."],
    ["Corridor","Inside the NY SMART I-Corridor tech hub: Buffalo, Rochester and Syracuse metros plus Batavia, Auburn and Ithaca."],
    ["Micron Clay","Micron's megafab under construction in Clay, New York, used as the distance reference."]];
+  const ranked=[...CAPS].sort((a,b)=>capCount(b.k)-capCount(a.k)), low=ranked[ranked.length-1];
   $("#aboutbody").innerHTML=`<div class="acol"><h4>Reading the view</h4><ul>
      <li>The bar and number beside each capability show how many of the ${CO.length} suppliers offer it.</li>
      <li>Selecting a capability highlights its fab zones with a striped pattern and a numbered label. Selecting a zone lists every supplier whose capabilities serve it.</li>
-     <li>Suppliers are sorted nearest to ${esc(REFS[state.ref].s)} first. Change the order with Sort.</li></ul>
+     <li>Suppliers are sorted nearest to ${esc(REFS[state.ref].s)} first. Change the order with Sort.</li>
+     <li><b>Most supplied:</b> ${ranked.slice(0,3).map(c=>`${esc(c.n)} (${capCount(c.k)})`).join(", ")}. <b>Fewest:</b> ${esc(low.n)} (${capCount(low.k)}).</li></ul>
     <h4>Supplier tiers</h4><ul>${tiersIn(CO).map(t=>`<li>${tpill(t)} ${TIERDEF[t]}.</li>`).join("")}</ul>
-    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists.</p></div>
+    <h4>About the data</h4><p>${CO.length} suppliers from the Tech Hub listing, data version ${esc(META.data_version||"unknown")}. ${CO.filter(d=>d.c.length).length} are mapped to fab capabilities and appear in the cutaway; the rest still show in search and sector lists. ${CO.filter(d=>d.statement).length} of ${CO.length} suppliers have a capability statement; look for the <b>Statement</b> link on their row.</p></div>
    <div class="acol"><h4>Glossary</h4><dl class="gloss">${gl.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join("")}</dl></div>`;
 }
 
@@ -927,18 +1078,76 @@ function setAct(n,scroll=true){sAct=n;
   n>=0?sIn.setAttribute("aria-activedescendant","sopt"+n):sIn.removeAttribute("aria-activedescendant");}
 function closeSearch(){sRes.hidden=true;sIn.setAttribute("aria-expanded","false");sIn.removeAttribute("aria-activedescendant");sAct=-1;}
 function clearSearch(){sIn.value="";sClr.hidden=true;closeSearch();$("#scount").textContent="";}
+/* Open one company in the capabilities section. Used by the search box and by
+   clicks in the Tableau dashboard; announces the choice so the dashboard can
+   follow it (see the link module at the end of the page). */
+const FIT_MQ=matchMedia("(min-width:1100px) and (min-height:600px)");   /* grid layout */
+/* Grid layout: show the details from the top, and if their heading is off screen
+   (for example after a pick in the bottom row) scroll just enough to show it. */
+function revealDetails(){const box=$("#capinfo"); box.scrollTop=0; const r=box.getBoundingClientRect();
+  if(r.top<0||r.top>innerHeight-140) scrollBy({top:r.top-12,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
+/* "How to use" help opens as a small card floating over its panel, so it never
+   pushes the panel's content (such as the Tableau dashboard) around. One card
+   at a time; it closes with its close button, the same button, Escape, a click
+   elsewhere, or a click into the dashboard. */
+let openHelp=null;
+function closeHelp(focusBtn){ if(!openHelp) return; const {b,t}=openHelp; t.hidden=true; b.setAttribute("aria-expanded","false"); openHelp=null; if(focusBtn) b.focus(); }
+function placeHelp(b,t){ const pr=b.closest(".panel").getBoundingClientRect(), br=b.getBoundingClientRect();
+  t.style.top=Math.round(br.bottom-pr.top+10)+"px";
+  t.style.setProperty("--arrow",Math.max(12,Math.round(pr.right-14-(br.left+br.width/2)-7))+"px"); }
+document.querySelectorAll(".infobtn").forEach(b=>{
+  const t=document.getElementById(b.getAttribute("aria-controls")); if(!t) return;
+  t.classList.add("helppop"); t.setAttribute("role","note");
+  const x=document.createElement("button"); x.type="button"; x.className="helpclose"; x.setAttribute("aria-label","Close help"); x.textContent="✕";
+  x.onclick=e=>{e.stopPropagation(); closeHelp(true);}; t.appendChild(x);
+  b.addEventListener("click",e=>{ e.stopPropagation(); const was=openHelp&&openHelp.b===b; closeHelp(false); if(was) return;
+    placeHelp(b,t); t.hidden=false; b.setAttribute("aria-expanded","true"); openHelp={b,t}; });
+});
+document.addEventListener("click",e=>{ if(openHelp&&!openHelp.t.contains(e.target)&&!openHelp.b.contains(e.target)) closeHelp(false); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&openHelp) closeHelp(true); });
+addEventListener("resize",()=>{ if(openHelp) placeHelp(openHelp.b,openHelp.t); });
+addEventListener("blur",()=>closeHelp(false));        /* a click into the Tableau iframe moves focus out of the page */
+function openCompany(id,opts={}){
+  if(!CO[id]) return false;
+  /* Reached from a sector list (or from another company that was): offer a way back to that list. */
+  const back=state.sector?{sector:state.sector,scroll:$("#capinfo").scrollTop}:(state.coSel!=null?state.back:null);
+  Object.assign(state,{cap:null,zone:null,coSel:id,sector:null,back}); state.openSup.clear();
+  state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
+  if(FIT_MQ.matches) revealDetails();
+  document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page",
+    keepSector:!!(back&&CO[id].s===back.sector)}}));
+  return true;
+}
+/* Open one industry sector's supplier list in the details panel. Used by the
+   search box and by clicks on a sector in the Tableau dashboard. */
+function openSector(name,opts={}){
+  if(!CO.some(d=>d.s===name)) return false;
+  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name,back:null}); state.openSup.clear();
+  state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
+  if(FIT_MQ.matches) revealDetails();
+  if(opts.scroll!=null) $("#capinfo").scrollTop=opts.scroll;     // back to where the list was
+  document.dispatchEvent(new CustomEvent("scan:sector",{detail:{name,source:opts.source||"page"}}));
+  return true;
+}
+/* Empty the details panel, as when the dashboard's sector selection is cleared. */
+function clearSelection(opts={}){
+  Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,back:null}); state.openSup.clear();
+  renderAll(); $("#capinfo").scrollTop=0;
+  document.dispatchEvent(new CustomEvent("scan:cleared",{detail:{source:opts.source||"page"}}));
+}
+function focusDetails(){const h=$("#capinfo h3"); if(h) h.focus({preventScroll:true});}
+window.SCAN={openCompany,openSector,clearSelection,get ready(){return CO.length>0;},get companies(){return CO;},
+  get hasSelection(){return state.coSel!=null||!!state.sector||!!state.cap||!!state.zone;},
+  get sectors(){return [...new Set(CO.map(d=>d.s).filter(Boolean))];}};
 function openResult(n){
   const it=sItems[n]; if(!it) return;
   if(it.type==="cap"){ select(it.k,null,{noScroll:true}); }
-  else {
-    Object.assign(state,{cap:null,zone:null,coSel:it.type==="co"?it.id:null,sector:it.type==="sec"?it.s:null});
-    if(it.type==="co") state.openSup.clear();
-    state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
-  }
+  else if(it.type==="co"){ openCompany(it.id,{source:"search"}); }
+  else { openSector(it.s,{source:"search"}); }
   closeSearch();
   try{ if(window.clarity){window.clarity("event","search_result_open");window.clarity("set","last_search_type",it.type);} }catch(e){}
   try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path:"ev/search_result_open",title:"search_result_open",event:true}); }catch(e){}
-  const box=$("#capinfo"); box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+  const box=$("#capinfo"); if(FIT_MQ.matches) revealDetails(); else box.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
   const h=box.querySelector("h3"); if(h) setTimeout(()=>h.focus({preventScroll:true}),350);
 }
 sIn.addEventListener("input",runSearch);
@@ -954,7 +1163,7 @@ sClr.onclick=()=>{clearSearch();sIn.focus();};
 document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) closeSearch();});
 
 /* ---------- reset ---------- */
-$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,sort:"dist",closed:new Set(),openSup:new Set(),view:"cut"});renderAll();$("#resetbtn").focus();};
+$("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,back:null,sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
 
 
 function stampFooter(){
@@ -975,6 +1184,7 @@ async function init(){
     CO=(data.suppliers||[]).map(adapt);
     if(!CO.length) throw new Error("the file contains no supplier records");
     stampFooter(); renderAbout(); renderAll();
+    document.dispatchEvent(new Event("scan:dataready"));
   }catch(err){
     renderZones();
     $("#capinfo").innerHTML=`<p class="help"><b>Could not load supplier data.</b><br><code>${esc(DATA_URL)}</code>: ${esc(err.message)}.<br><br>`
@@ -984,6 +1194,365 @@ async function init(){
   }
 }
 init();
+</script>
+<script type="module">
+/* ===========================================================================
+   Two way link between this page and the Tableau Public dashboard.
+
+   Built on the Tableau Embedding API v3, which Tableau Public hosts.
+     Page to viz : choosing a company in the search box highlights it in the
+                   dashboard.
+     Viz to page : clicking a single company in the dashboard opens it in the
+                   supplier capabilities section, with a shortcut to jump there.
+
+   The link needs one field in the dashboard that identifies a company. Every
+   worksheet is checked for the names in LINK.keyFields, in order. "id" matches
+   data/suppliers.json exactly; a supplier name also works and is matched
+   loosely (case, punctuation and Inc/LLC/Corp are ignored).
+
+   If the API library fails to load, or Tableau reports a load error, the page
+   falls back to the standard embed. The dashboard is never lost, only the link.
+
+   Add ?scandebug=1 to the page address to list every worksheet, its fields,
+   the company field found and the match counts, in the console and in a panel
+   under the dashboard.
+=========================================================================== */
+const LINK = {
+  vizUrl: "https://public.tableau.com/shared/58GF35NYY",
+  apiUrl: "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js",
+  keyFields: ["id", "supplier_name", "Supplier Name", "Supplier_Name", "Supplier",
+              "Company", "Company Name", "Name"],
+  // Field that identifies an industry sector, for clicks on sector bars.
+  sectorFields: ["industry_sector", "Industry Sector", "Industry_Sector", "Industry Group",
+                 "Industry Groups", "Industry", "Sector"],
+  sheets: [],             // worksheet to highlight in, first match wins; empty picks a map sheet
+  loadTimeoutMs: 60000,   // no interactive viz by then means fall back to the standard embed
+};
+
+const DEBUG = /[?&]scandebug=1(&|$)/.test(location.search);
+const host = document.getElementById("viz1795017713550");
+const statusEl = document.getElementById("tablink");
+const dbgEl = document.getElementById("tabdebug");
+const IDLE = "Linked to the search box: choose a company there to highlight it here, "
+           + "or click a single company in the dashboard to see its details in the search panel.";
+const IDLE_SECTORS = "Linked to the search box: choose a company there to highlight it here. "
+           + "Click a single company or an industry sector in the dashboard to see its details or its suppliers in the search panel.";
+
+const log = (...a) => { if (DEBUG) console.log("[SCAN link]", ...a); };
+const escH = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s ?? "").toLowerCase().replace(/&/g, " and ")
+  .replace(/\b(inc|llc|ltd|corp|corporation|co|company|the)\b\.?/g, " ")
+  .replace(/[^a-z0-9]+/g, " ").trim();
+const bareField = f => String(f).replace(/^(ATTR|MIN|MAX)\((.*)\)$/, "$2").trim();   // ATTR(id) -> id
+const isMeasure = f => /^(CNT|CNTD|COUNT|COUNTD|SUM|AVG|MEDIAN|STDEV|VAR|AGG|AGG\w*)\(/i.test(String(f).trim());   // CNT(name) is a count, not a company
+function say(html, kind = "") {
+  if (!statusEl) return;
+  statusEl.className = "tablink" + (kind ? " " + kind : "");
+  statusEl.innerHTML = html; statusEl.hidden = !html;
+  const go = statusEl.querySelector(".tablinkgo");
+  if (go) go.onclick = e => {
+    e.preventDefault();
+    const box = document.getElementById("capinfo");
+    box.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    const h = box.querySelector("h3"); if (h) setTimeout(() => h.focus({ preventScroll: true }), 350);
+  };
+}
+function track(name, tags) {
+  try { if (window.clarity) { window.clarity("event", name); if (tags) for (const k in tags) window.clarity("set", k, String(tags[k])); } } catch (e) {}
+  try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: "ev/" + name, title: name, event: true }); } catch (e) {}
+}
+
+let api = null, viz = null, ready = false, failed = false, report = [];
+let targets = [];                       // worksheets that carry a company field
+let sectorTargets = [];                 // worksheets that carry an industry sector field
+let pending = null;                     // a company chosen before the dashboard was ready
+let echo = { value: null, until: 0 };   // our own highlight, so its event is ignored
+let echoSector = { value: null, until: 0 };   // our own sector highlight
+let quietUntil = 0;                     // our own clears raise empty selection events; ignore them briefly
+let pendingSector = null;               // a sector chosen before the dashboard was ready
+
+/* ---------- size, mirroring the standard Tableau embed snippet ---------- */
+function heightFor() { const w = host.offsetWidth || 1000; return w > 500 ? Math.round(w * 0.75) : 1827; }
+
+/* ---------- fallback: the standard embed, exactly as before ---------- */
+function staticImage(path) {
+  const p = path.split("/");
+  if (p[0] === "shared" && p[1]) return `https://public.tableau.com/static/images/${p[1].slice(0, 2)}/${p[1]}/1.png`;
+  if (p[0] === "views" && p[1] && p[2]) return `https://public.tableau.com/static/images/${p[1].slice(0, 2)}/${p[1]}/${p[2]}/1.png`;
+  return "";
+}
+function legacyEmbed(reason) {
+  if (failed) return; failed = true; ready = false;
+  log("falling back to the standard embed:", reason);
+  const path = LINK.vizUrl.replace(/^https:\/\/public\.tableau\.com\//, "").replace(/\?.*$/, "");
+  host.innerHTML = "";
+  const obj = document.createElement("object");
+  obj.className = "tableauViz"; obj.style.display = "none";
+  const params = [["host_url", "https%3A%2F%2Fpublic.tableau.com%2F"], ["embed_code_version", "3"],
+    ["path", path], ["toolbar", "yes"], ["static_image", staticImage(path)], ["animate_transition", "yes"],
+    ["display_static_image", "yes"], ["display_spinner", "yes"], ["display_overlay", "yes"],
+    ["display_count", "no"], ["language", "en-US"], ["filter", "publish=yes"]];
+  for (const [n, v] of params) { const p = document.createElement("param"); p.name = n; p.value = v; obj.appendChild(p); }
+  host.appendChild(obj);
+  obj.style.width = "100%"; obj.style.height = (host.clientHeight || heightFor()) + "px";
+  const s = document.createElement("script"); s.src = "https://public.tableau.com/javascripts/api/viz_v1.js";
+  obj.parentNode.insertBefore(s, obj);
+  say("The dashboard loaded without its link to the search box, so choices here and in the other panels are independent.", "muted");
+  debugPanel(reason);
+}
+
+/* ---------- start ---------- */
+async function start() {
+  try { api = await import(LINK.apiUrl); }
+  catch (e) { legacyEmbed("the Embedding API library did not load (" + e.message + ")"); return; }
+  try { mount(); }
+  catch (e) { if (viz) viz.remove(); legacyEmbed("the Embedding API could not create the dashboard (" + e.message + ")"); }
+}
+function mount() {
+  const { TableauViz, TableauEventType } = api;
+  if (typeof TableauViz !== "function" || !TableauEventType) throw new Error("unexpected library contents");
+  viz = new TableauViz();
+  viz.id = "scanviz";
+  viz.src = LINK.vizUrl;
+  viz.toolbar = "bottom";
+  viz.width = "100%";
+  viz.height = "100%";            // the panel sets the size, so the dashboard follows window resizes
+  const timer = setTimeout(() => { if (!ready && !failed) { viz.remove(); legacyEmbed("the dashboard did not become interactive within " + LINK.loadTimeoutMs / 1000 + " seconds"); } }, LINK.loadTimeoutMs);
+  viz.addEventListener(TableauEventType.VizLoadError, ev => {
+    clearTimeout(timer); viz.remove();
+    let msg = ev.detail; try { msg = JSON.parse(ev.detail.message).errorCode || ev.detail.message; } catch (e) { msg = (ev.detail && ev.detail.message) || String(ev.detail); }
+    legacyEmbed("Tableau reported a load error: " + msg);
+  });
+  viz.addEventListener(TableauEventType.FirstInteractive, async () => { clearTimeout(timer); await discover(); });
+  viz.addEventListener(TableauEventType.MarkSelectionChanged, onMarks);
+  host.innerHTML = "";
+  host.appendChild(viz);
+}
+
+/* ---------- find the worksheets that identify companies ---------- */
+async function discover() {
+  const active = viz.workbook.activeSheet;
+  const sheets = active.sheetType === "dashboard" ? active.worksheets : [active];
+  report = []; targets = []; sectorTargets = [];
+  for (const ws of sheets) {
+    let table;
+    try { table = await ws.getSummaryDataAsync({ ignoreSelection: true }); }
+    catch (e) { report.push({ sheet: ws.name, fields: "(could not read: " + e.message + ")", key: "none", values: 0 }); continue; }
+    const cols = table.columns.map(c => c.fieldName);
+    let idx = -1;
+    for (const k of LINK.keyFields) { idx = cols.findIndex(c => !isMeasure(c) && norm(bareField(c)) === norm(k)); if (idx >= 0) break; }
+    const values = idx < 0 ? [] : [...new Set(table.data.map(r => r[idx] && r[idx].value)
+      .filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%").map(String))];
+    let sidx = -1;
+    for (const k of LINK.sectorFields) { sidx = cols.findIndex(c => !isMeasure(c) && norm(bareField(c)) === norm(k)); if (sidx >= 0) break; }
+    const svalues = sidx < 0 ? [] : [...new Set(table.data.map(r => r[sidx] && r[sidx].value)
+      .filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%" && String(v).toLowerCase() !== "null").map(String))];
+    report.push({ sheet: ws.name, fields: cols.join(", "), key: idx < 0 ? "none" : cols[idx], values: values.length,
+                  sector: sidx < 0 ? "none" : cols[sidx], sectors: svalues.length });
+    if (idx >= 0) targets.push({ ws, field: bareField(cols[idx]), values });
+    if (sidx >= 0) sectorTargets.push({ ws, field: bareField(cols[sidx]), values: svalues });
+  }
+  ready = true;
+  log("worksheets:", report);
+  link();
+}
+
+/* ---------- match dashboard values to page companies ---------- */
+function link() {
+  if (!ready || failed || !window.SCAN || !window.SCAN.ready) return;
+  const CO = window.SCAN.companies;
+  const bySid = new Map(CO.filter(d => d.sid).map(d => [d.sid, d]));
+  const byName = new Map();
+  for (const d of CO) { const k = norm(d.n); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(d); }
+  for (const t of targets) {
+    const isId = norm(t.field) === "id";
+    t.toPage = new Map(); t.toViz = new Map();
+    for (const v of t.values) {
+      const hits = isId ? (bySid.has(v) ? [bySid.get(v)] : []) : (byName.get(norm(v)) || []);
+      for (const d of hits) t.toViz.set(d.id, v);
+      if (hits.length) t.toPage.set(v, hits[0]);
+    }
+  }
+  const sectorByNorm = new Map(window.SCAN.sectors.map(n => [norm(n), n]));
+  for (const t of sectorTargets) {
+    t.toPage = new Map();
+    for (const v of t.values) { const n = sectorByNorm.get(norm(v)); if (n) t.toPage.set(v, n); }
+  }
+  for (const r of report) {
+    const t = targets.find(x => x.ws.name === r.sheet); r.matched = t ? t.toPage.size : 0;
+    const st = sectorTargets.find(x => x.ws.name === r.sheet); r.sectorsMatched = st ? st.toPage.size : 0;
+  }
+  targets = targets.filter(t => t.toPage.size > 0);         // a field that matches no company is not a company field
+  sectorTargets = sectorTargets.filter(t => t.toPage.size > 0);
+  debugPanel();
+  if (!targets.length && sectorTargets.length) {
+    say("Click an industry sector in the dashboard to list its suppliers in the search panel. "
+      + "Companies aren't linked yet because the dashboard has no company field that matches the supplier list.", "muted");
+    return;
+  }
+  if (!targets.length) {
+    const found = report.filter(r => r.key !== "none");
+    say(found.length
+      ? `The dashboard is live and has a company field (${found.map(r => escH(r.key)).join(", ")}), but none of its values match the supplier list, so it can't follow the search box yet.`
+      : `The dashboard is live, but none of its sheets has a company field (looked for ${LINK.keyFields.map(escH).join(", ")}), so it can't follow the search box yet.`, "muted");
+    return;
+  }
+  say(sectorTargets.length ? IDLE_SECTORS : IDLE);
+  if (pending !== null) { const p = pending; pending = null; highlight(p); }
+  if (pendingSector !== null) { const p = pendingSector; pendingSector = null; highlightSector(p); }
+}
+
+function primary() {
+  for (const name of LINK.sheets) { const t = targets.find(x => x.ws.name === name); if (t) return t; }
+  return targets.find(t => /map/i.test(t.ws.name)) || targets[0];
+}
+
+/* ---------- page to viz ---------- */
+/* The sheet that shows sectors on their own, such as the industry bar chart. */
+function sectorPrimary() {
+  const only = sectorTargets.filter(t => !targets.some(c => c.ws.name === t.ws.name));
+  return only.find(t => /bar|sector|industr/i.test(t.ws.name)) || only[0] || null;
+}
+async function quietly(fn) { quietUntil = Date.now() + 1500; try { await fn(); } finally { quietUntil = Date.now() + 1500; } }
+
+async function highlight(id, opts = {}) {
+  if (failed) return;
+  if (!ready || !window.SCAN || !window.SCAN.ready) { pending = id; return; }
+  const t = primary(); if (!t) return;
+  const d = window.SCAN.companies[id]; if (!d) return;
+  const v = t.toViz.get(id);
+  // A company from search may sit outside a sector the bar chart is filtering the map to,
+  // so clear the bar first. A company picked from that sector's own list keeps it.
+  const sp = sectorPrimary();
+  if (sp && !opts.keepSector) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
+  try {
+    if (v === undefined) {
+      await quietly(() => t.ws.clearSelectedMarksAsync());
+      say(`<b>${escH(d.n)}</b> isn't in the dashboard, so nothing is highlighted there.`, "muted");
+      return;
+    }
+    echo = { value: v, until: Date.now() + 3000 };
+    await t.ws.selectMarksByValueAsync([{ fieldName: t.field, value: [v] }], api.SelectionUpdateType.Replace);
+    say(`Highlighted <b>${escH(d.n)}</b> in the dashboard.`);
+  } catch (e) {
+    log("highlight failed on", t.ws.name, e);
+    say(`Couldn't highlight <b>${escH(d.n)}</b> in the dashboard (${escH(e.message)}).`, "muted");
+  }
+}
+async function clearAll(message) {
+  pending = null; pendingSector = null;
+  if (!ready || failed) return;
+  const t = primary(), sp = sectorPrimary();
+  echo = { value: null, until: Date.now() + 3000 };
+  if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear failed", e); } }
+  if (sp && message === undefined) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
+  if (message) { say(message, "muted"); return; }
+  if (!t) { if (sectorTargets.length) say("Click an industry sector in the dashboard to list its suppliers in the search panel.", "muted"); return; }
+  say(sectorTargets.length ? IDLE_SECTORS : IDLE);
+}
+
+/* ---------- page to viz: sectors ---------- */
+async function highlightSector(name) {
+  if (failed) return;
+  if (!ready || !window.SCAN || !window.SCAN.ready) { pendingSector = name; return; }
+  const sp = sectorPrimary(); if (!sp) return;
+  let v; for (const [val, n] of sp.toPage) if (n === name) { v = val; break; }
+  const t = primary();
+  if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }   // the sector replaces any company
+  try {
+    if (v === undefined) {
+      await quietly(() => sp.ws.clearSelectedMarksAsync());
+      say(`<b>${escH(name)}</b> isn't in the dashboard's sector chart, so nothing is highlighted there.`, "muted");
+      return;
+    }
+    echoSector = { value: v, until: Date.now() + 3000 };
+    await sp.ws.selectMarksByValueAsync([{ fieldName: sp.field, value: [v] }], api.SelectionUpdateType.Replace);
+    say(`Highlighted <b>${escH(name)}</b> in the dashboard's sector chart.`);
+  } catch (e) {
+    log("sector highlight failed on", sp.ws.name, e);
+    say(`Couldn't highlight <b>${escH(name)}</b> in the dashboard (${escH(e.message)}).`, "muted");
+  }
+}
+
+/* ---------- viz to page ---------- */
+const colValues = (table, field) => {
+  const idx = table.columns.findIndex(c => !isMeasure(c.fieldName) && norm(bareField(c.fieldName)) === norm(field));
+  return idx < 0 ? [] : [...new Set(table.data.map(r => r[idx] && r[idx].value).filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%").map(String))];
+};
+async function onMarks(ev) {
+  if (!ready || failed) return;
+  const ws = ev.detail && (ev.detail.worksheet || ev.detail.sheet); if (!ws) return;
+  const t = targets.find(x => x.ws.name === ws.name), st = sectorTargets.find(x => x.ws.name === ws.name);
+  if (!t && !st) return;
+  let table;
+  try { table = (await ev.detail.getMarksAsync()).data[0]; } catch (e) { log("could not read marks", e); return; }
+  if (!table || !table.data.length) {                        // selection cleared
+    const sp = sectorPrimary();
+    if (sp && st === sp && Date.now() >= quietUntil) onSectorCleared();
+    return;
+  }
+  const values = t ? colValues(table, t.field) : [];
+  if (!values.length) { if (st) onSector(colValues(table, st.field), st); return; }   // no company in the marks: a sector bar
+  if (values.length === 1 && echo.value === values[0] && Date.now() < echo.until) return;   // our own highlight
+  if (values.length > 1) { say(`${values.length} companies are selected in the dashboard. Click a single company to see its details.`, "muted"); return; }
+  const v = values[0], d = t.toPage.get(v);
+  track("tableau_mark_click", { tableau_company: v });
+  if (!d) { say(`<b>${escH(v)}</b> isn't in the supplier list, so there are no details to show.`, "muted"); return; }
+  window.SCAN.openCompany(d.id, { source: "tableau" });
+  say(`Showing <b>${escH(d.n)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
+}
+function onSectorCleared() {
+  track("tableau_sector_clear");
+  if (!window.SCAN.hasSelection) { say(IDLE_SECTORS); return; }
+  window.SCAN.clearSelection({ source: "tableau" });
+  clearAll("Sector cleared in the dashboard, so the details panel was reset.");   // also drops the company highlight on the map
+}
+function onSector(values, st) {
+  if (!values.length) return;
+  if (values.length === 1 && echoSector.value === values[0] && Date.now() < echoSector.until) return;   // our own sector highlight
+  if (values.length > 1) { say(`${values.length} sectors are selected in the dashboard. Click a single sector to list its suppliers.`, "muted"); return; }
+  const v = values[0], name = st.toPage.get(v);
+  track("tableau_sector_click", { tableau_sector: v });
+  if (!name) { say(`<b>${escH(v)}</b> isn't an industry sector in the supplier list, so there's nothing to list.`, "muted"); return; }
+  window.SCAN.openSector(name, { source: "tableau" });
+  const n = window.SCAN.companies.filter(d => d.s === name).length;
+  say(`Listing the ${n} suppliers in <b>${escH(name)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
+}
+
+/* ---------- diagnostics, only with ?scandebug=1 ---------- */
+function debugPanel(reason) {
+  if (!DEBUG || !dbgEl) return;
+  dbgEl.hidden = false; dbgEl.open = true;
+  const body = dbgEl.querySelector("div");
+  const CO = (window.SCAN && window.SCAN.companies) || [];
+  let html = `<p><b>Viz:</b> ${escH(LINK.vizUrl)}<br><b>State:</b> ${failed ? "standard embed (no link)" : ready ? "linked" : "loading"}`
+    + (reason ? `<br><b>Fallback reason:</b> ${escH(reason)}` : "") + `</p>`;
+  if (report.length) {
+    html += `<table><thead><tr><th>Worksheet</th><th>Company field</th><th>Companies in sheet</th><th>Matched to page</th><th>Sector field</th><th>Sectors matched</th><th>All fields</th></tr></thead><tbody>`
+      + report.map(r => `<tr><td>${escH(r.sheet)}</td><td>${escH(r.key)}</td><td>${r.values}</td><td>${r.matched ?? 0}</td><td>${escH(r.sector || "none")}</td><td>${r.sectorsMatched ?? 0} of ${r.sectors ?? 0}</td><td>${escH(r.fields)}</td></tr>`).join("")
+      + `</tbody></table>`;
+    const t = primary();
+    if (t && t.toPage) {
+      const missingOnPage = t.values.filter(v => !t.toPage.has(v));
+      const missingInViz = CO.filter(d => !t.toViz.has(d.id)).map(d => d.n);
+      html += `<p><b>Highlights go to:</b> ${escH(t.ws.name)} (field ${escH(t.field)})</p>`
+        + `<p><b>In the dashboard but not on the page (${missingOnPage.length}):</b> ${missingOnPage.slice(0, 25).map(escH).join("; ") || "none"}</p>`
+        + `<p><b>On the page but not in the dashboard (${missingInViz.length}):</b> ${missingInViz.slice(0, 25).map(escH).join("; ") || "none"}</p>`;
+    }
+    console.table(report);
+  }
+  body.innerHTML = html;
+}
+
+/* ---------- wire up ---------- */
+document.addEventListener("scan:company", e => { if (e.detail && e.detail.source !== "tableau") highlight(e.detail.id, { keepSector: e.detail.keepSector }); });
+document.addEventListener("scan:sector", e => { if (e.detail && e.detail.source !== "tableau") highlightSector(e.detail.name); });
+document.addEventListener("scan:reset", () => clearAll());
+document.addEventListener("scan:dataready", link);
+window.SCANLink = { get state() { return { ready, failed, pending, pendingSector, sectorSheet: sectorPrimary() ? sectorPrimary().ws.name : null, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })),
+  sectorTargets: sectorTargets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })), report }; } };
+if (host) start();
 </script>
 
 <!-- Visitor feedback tracking: Microsoft Clarity + GoatCounter events. Clarity project ID: z995023x6u. -->
@@ -1004,6 +1573,7 @@ init();
     var cap=t.closest(".cap"); if(cap){ track("capability_select",{last_capability:cap.dataset.k}); success(); return; }
     var zone=t.closest(".zone,.zb,.zbtn,.zonelist details>summary"); if(zone){ var zd=zone.dataset.z||(zone.parentNode&&zone.parentNode.dataset&&zone.parentNode.dataset.z)||""; track("zone_select",{last_zone:zd}); success(); return; }
     var chip=t.closest(".chip2"); if(chip){ track(chip.dataset.k?"capability_select":"zone_select",chip.dataset.k?{last_capability:chip.dataset.k}:{last_zone:chip.dataset.z}); success(); return; }
+    var stmt=t.closest(".stmt,.profile a[href*=\"box.com\"]"); if(stmt){ track("statement_open"); success(); return; }
     var link=t.closest(".profile a[href]"); if(link){ track("website_link_click"); success(); return; }
     var co=t.closest(".cobtn"); if(co){ if(co.getAttribute("aria-expanded")!=="true") track("company_detail_view"); success(); return; }
     var vb=t.closest(".seg button"); if(vb){ track("view_"+vb.dataset.view); return; }
