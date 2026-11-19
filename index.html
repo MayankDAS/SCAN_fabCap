@@ -581,6 +581,17 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   .q-fab #listview{flex:1;min-height:0;overflow:auto}
   .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
 }
+/* "How to use" cards float over their panel instead of taking space in it */
+.dash>.panel{position:relative}
+.dash .howto.helppop{position:absolute;right:14px;z-index:50;width:max-content;max-width:min(480px,calc(100% - 28px));
+  max-height:none;overflow:visible;margin:0;padding:11px 38px 11px 13px;font-size:14.5px;line-height:1.5;
+  background:linear-gradient(var(--accent-soft),var(--accent-soft)),var(--panel);border:1px solid var(--accent);border-left-width:5px;
+  box-shadow:0 18px 40px -12px rgba(10,40,100,.45)}
+.dash .howto.helppop::before{content:"";position:absolute;top:-8px;right:var(--arrow,24px);width:14px;height:14px;transform:rotate(45deg);
+  background:linear-gradient(var(--accent-soft),var(--accent-soft)),var(--panel);border-top:1px solid var(--accent);border-left:1px solid var(--accent)}
+.helpclose{position:absolute;top:6px;right:6px;width:26px;height:26px;border:0;border-radius:7px;background:transparent;color:var(--ink2);font-size:14px;line-height:1;cursor:pointer}
+.helpclose:hover{background:var(--panel);color:var(--ink)}
+.helpclose:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
 /* Sector lists: names open the company; back link from a company to its sector list */
 .cobtn.conav{gap:4px}
 .cobtn .navarrow{font-weight:700;color:var(--accent);text-decoration:none;display:inline-block;margin-left:2px}
@@ -1068,9 +1079,27 @@ const FIT_MQ=matchMedia("(min-width:1100px) and (min-height:600px)");   /* grid 
    (for example after a pick in the bottom row) scroll just enough to show it. */
 function revealDetails(){const box=$("#capinfo"); box.scrollTop=0; const r=box.getBoundingClientRect();
   if(r.top<0||r.top>innerHeight-140) scrollBy({top:r.top-12,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});}
-document.querySelectorAll(".infobtn").forEach(b=>b.addEventListener("click",()=>{
+/* "How to use" help opens as a small card floating over its panel, so it never
+   pushes the panel's content (such as the Tableau dashboard) around. One card
+   at a time; it closes with its close button, the same button, Escape, a click
+   elsewhere, or a click into the dashboard. */
+let openHelp=null;
+function closeHelp(focusBtn){ if(!openHelp) return; const {b,t}=openHelp; t.hidden=true; b.setAttribute("aria-expanded","false"); openHelp=null; if(focusBtn) b.focus(); }
+function placeHelp(b,t){ const pr=b.closest(".panel").getBoundingClientRect(), br=b.getBoundingClientRect();
+  t.style.top=Math.round(br.bottom-pr.top+10)+"px";
+  t.style.setProperty("--arrow",Math.max(12,Math.round(pr.right-14-(br.left+br.width/2)-7))+"px"); }
+document.querySelectorAll(".infobtn").forEach(b=>{
   const t=document.getElementById(b.getAttribute("aria-controls")); if(!t) return;
-  const open=b.getAttribute("aria-expanded")!=="true"; b.setAttribute("aria-expanded",String(open)); t.hidden=!open;}));
+  t.classList.add("helppop"); t.setAttribute("role","note");
+  const x=document.createElement("button"); x.type="button"; x.className="helpclose"; x.setAttribute("aria-label","Close help"); x.textContent="✕";
+  x.onclick=e=>{e.stopPropagation(); closeHelp(true);}; t.appendChild(x);
+  b.addEventListener("click",e=>{ e.stopPropagation(); const was=openHelp&&openHelp.b===b; closeHelp(false); if(was) return;
+    placeHelp(b,t); t.hidden=false; b.setAttribute("aria-expanded","true"); openHelp={b,t}; });
+});
+document.addEventListener("click",e=>{ if(openHelp&&!openHelp.t.contains(e.target)&&!openHelp.b.contains(e.target)) closeHelp(false); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&openHelp) closeHelp(true); });
+addEventListener("resize",()=>{ if(openHelp) placeHelp(openHelp.b,openHelp.t); });
+addEventListener("blur",()=>closeHelp(false));        /* a click into the Tableau iframe moves focus out of the page */
 function openCompany(id,opts={}){
   if(!CO[id]) return false;
   /* Reached from a sector list (or from another company that was): offer a way back to that list. */

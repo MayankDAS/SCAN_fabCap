@@ -308,6 +308,33 @@ for (const [cfg, label] of [[{ apiFail: true }, "API library fails to load"], [{
   const sel = (await mlog(page)).filter(x => x.op === "select" && x.sheet === "Sector Bars");
   check(sel.length === 1 && sel[0].value[0] === "Advanced Manufacturing", "a sector chosen early is highlighted once the dashboard loads", JSON.stringify(sel));
   await page.close(); }
+
+/* 20. "How to use" floats over its panel instead of resizing it */
+{ const { page, errors } = await open();
+  await waitReady(page); await sleep(300);
+  const rect = sel => page.evaluate(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)].join(","); }, sel);
+  const vizBefore = await rect("tableau-viz"), panelBefore = await rect(".q-tab");
+  await page.click(".q-tab .infobtn"); await sleep(250);
+  const help = await page.evaluate(() => { const h = document.getElementById("howto-tab"), b = document.querySelector(".q-tab .infobtn");
+    const r = h.getBoundingClientRect(), br = b.getBoundingClientRect(); const cs = getComputedStyle(h);
+    return { shown: !h.hidden, position: cs.position, below: r.top > br.bottom, expanded: b.getAttribute("aria-expanded"),
+      onTop: document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest("#howto-tab") !== null }; });
+  check(help.shown && help.position === "absolute" && help.below && help.onTop && help.expanded === "true", "Tableau help opens as a card over the panel", JSON.stringify(help));
+  check((await rect("tableau-viz")) === vizBefore && (await rect(".q-tab")) === panelBefore, "the dashboard keeps its exact size and place while help is open", `${vizBefore} / ${await rect("tableau-viz")}`);
+  await page.keyboard.press("Escape"); await sleep(150);
+  const esc = await page.evaluate(() => ({ hidden: document.getElementById("howto-tab").hidden, focus: document.activeElement?.classList.contains("infobtn") }));
+  check(esc.hidden && esc.focus, "Escape closes it and returns focus to the button", JSON.stringify(esc));
+  await page.click(".q-search .infobtn"); await sleep(150); await page.click(".q-caps .infobtn"); await sleep(150);
+  const one = await page.evaluate(() => [...document.querySelectorAll(".howto")].filter(h => !h.hidden).map(h => h.id));
+  check(one.length === 1 && one[0] === "howto-cap", "only one help card is open at a time", JSON.stringify(one));
+  await page.mouse.click(5, 300); await sleep(150);
+  check(await page.evaluate(() => [...document.querySelectorAll(".howto")].every(h => h.hidden)), "a click elsewhere closes it");
+  await page.click(".q-fab .infobtn"); await sleep(150); await page.click("#howto-fab .helpclose"); await sleep(150);
+  check(await page.evaluate(() => document.getElementById("howto-fab").hidden), "its close button closes it");
+  const searchH = await rect(".q-search .sfield"); await page.click(".q-search .infobtn"); await sleep(150);
+  check((await rect(".q-search .sfield")) === searchH, "search help no longer pushes the search box down");
+  check(errors.length === 0, "no page errors with help cards", errors.join(" | "));
+  await page.close(); }
 console.log(`\n${pass} passed, ${fail} failed`);
 await browser.close();
 process.exit(fail ? 1 : 0);
