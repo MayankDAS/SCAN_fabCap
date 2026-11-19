@@ -41,7 +41,7 @@ export class TableauViz extends HTMLElement {
   connectedCallback() {
     if (this._init) return; this._init = true;
     LOG.push({ op: "load", src: this.src, toolbar: this.toolbar, height: this.height });
-    this.innerHTML = '<div style="height:240px;background:repeating-linear-gradient(45deg,#e8eef8,#e8eef8 12px,#dfe7f4 12px,#dfe7f4 24px);display:grid;place-items:center;font:14px sans-serif">Mock Tableau dashboard</div>';
+    this.style.display='block';this.innerHTML = '<div style="height:100%;min-height:200px;background:repeating-linear-gradient(45deg,#e8eef8,#e8eef8 12px,#dfe7f4 12px,#dfe7f4 24px);display:grid;place-items:center;font:14px sans-serif">Mock Tableau dashboard</div>';
     if (CFG.loadError) { setTimeout(() => this.dispatchEvent(new CustomEvent("vizloaderror", { detail: { message: JSON.stringify({ errorCode: "mock-load-error" }) } })), 150); return; }
     if (CFG.neverInteractive) return;
     setTimeout(() => {

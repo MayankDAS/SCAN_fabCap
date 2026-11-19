@@ -84,17 +84,16 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
   await viz(page, n => document.querySelector("tableau-viz")._userClick("Supplier Map", [n]), target);
   await sleep(500);
   check((await shown(page)).includes(target), "clicking a company in the map opens it on the page", `${target} -> ${await shown(page)}`);
-  check((await status(page)).startsWith(`Opened ${target}`), "status offers a shortcut to the details", await status(page));
+  check((await status(page)).startsWith(`Showing ${target} in the search panel`), "status says where the details are", await status(page));
   const pushedBack = (await mlog(page)).filter(x => x.op === "select").length;
   check(pushedBack === 1, "a click from the map is not pushed back to the map", `selects ${pushedBack}`);
   const clar = await page.evaluate(() => (window.clarity && window.clarity.q || []).map(a => [...a]).filter(a => a[1] === "tableau_mark_click" || a[1] === "tableau_company"));
   check(clar.some(a => a[1] === "tableau_mark_click") && clar.some(a => a[1] === "tableau_company" && a[2] === target), "map clicks are logged to Clarity with the company", JSON.stringify(clar));
 
-  /* 5. Go to it link scrolls to the details */
-  const y0 = await page.evaluate(() => scrollY);
-  await page.click("#tablink .tablinkgo"); await sleep(900);
-  const pos = await page.evaluate(() => Math.round(document.getElementById("capinfo").getBoundingClientRect().top));
-  check(pos < 120, "Go to it scrolls to the capabilities section", `scrollY ${y0} -> section top ${pos}px`);
+  /* 5. one screen layout: details already beside the map, so no shortcut and no page jump */
+  const fit = await page.evaluate(() => ({ go: getComputedStyle(document.querySelector("#tablink .tablinkgo")).display, y: scrollY,
+    inView: (r => r.top >= 0 && r.top < innerHeight)(document.getElementById("capinfo").getBoundingClientRect()) }));
+  check(fit.go === "none" && fit.y === 0 && fit.inView, "one screen layout: details visible beside the map, no shortcut, no page jump", JSON.stringify(fit));
 
   /* 6. multi select, unknown company, clear */
   await viz(page, (a, b) => document.querySelector("tableau-viz")._userClick("Supplier Map", [a, b]), names[0], names[1]); await sleep(400);
@@ -157,7 +156,7 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
   await searchPick(page, missing.slice(0, 12));
   check((await status(page)).includes("isn't in the dashboard") || (await status(page)).includes("Highlighted"), "a company missing from the dashboard says so", await status(page));
   await viz(page, () => document.querySelector("tableau-viz")._userClick("Supplier Map", ["Ghost Supplier LLC"])); await sleep(400);
-  check((await status(page)).includes("isn't in the capability list"), "a dashboard company missing from the page says so", await status(page));
+  check((await status(page)).includes("isn't in the supplier list"), "a dashboard company missing from the page says so", await status(page));
   await page.close(); }
 
 /* 13. no company field at all */
@@ -193,6 +192,17 @@ for (const [cfg, label] of [[{ apiFail: true }, "API library fails to load"], [{
   check(ok, "the viz still sits inside #viz1795017713550, which the engagement tracker watches");
   await page.close(); }
 
+
+/* 17. stacked layout on a tablet: Go to it scrolls to the details */
+{ const { page } = await open();
+  await page.setViewport({ width: 1000, height: 800 }); await waitReady(page); await sleep(300);
+  const name = await page.evaluate(() => window.SCAN.companies[5].n);
+  await viz(page, n => document.querySelector("tableau-viz")._userClick("Supplier Map", [n]), name); await sleep(500);
+  await page.evaluate(() => document.querySelector("tableau-viz").scrollIntoView()); await sleep(200);
+  await page.click("#tablink .tablinkgo"); await sleep(900);
+  const pos = await page.evaluate(() => Math.round(document.getElementById("capinfo").getBoundingClientRect().top));
+  check(pos >= -5 && pos < 120, "stacked layout: Go to it scrolls to the details", `details top ${pos}px`);
+  await page.close(); }
 console.log(`\n${pass} passed, ${fail} failed`);
 await browser.close();
 process.exit(fail ? 1 : 0);
