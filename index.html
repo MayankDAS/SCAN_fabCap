@@ -640,7 +640,7 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
     <section class="panel q-tab" aria-labelledby="h-tab">
       <div class="phead"><h2 id="h-tab">Tech Hub supplier ecosystem overview</h2>
         <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="howto-tab"><span aria-hidden="true">?</span> How to use</button></div></div>
-    <p class="howto" id="howto-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. Choosing a company in the search box highlights it here, and clicking a single company here shows its details in the search panel.</span></p>
+    <p class="howto" id="howto-tab" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> click marks to filter the dashboard; the toolbar underneath has full screen, download and reset. Choosing a company in the search box highlights it here. Clicking a single company here shows its details in the search panel, and clicking an industry sector bar lists that sector's suppliers there.</span></p>
     <div class="tabwrap" role="region" aria-label="Tableau Public dashboard: Tech Hub supplier ecosystem overview"><div id="viz1795017713550" class="tabhost"><p class="tabloading">Loading the Tableau Public dashboard…</p><noscript><p class="tabloading"><a href="https://public.tableau.com/shared/58GF35NYY">Open the dashboard on Tableau Public</a></p></noscript></div></div>
     <p class="tablink" id="tablink" role="status" aria-live="polite" hidden></p>
     <details class="tabdebug" id="tabdebug" hidden><summary>Link diagnostics</summary><div></div></details>
@@ -1065,15 +1065,23 @@ function openCompany(id,opts={}){
   document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page"}}));
   return true;
 }
-window.SCAN={openCompany,get ready(){return CO.length>0;},get companies(){return CO;}};
+/* Open one industry sector's supplier list in the details panel. Used by the
+   search box and by clicks on a sector in the Tableau dashboard. */
+function openSector(name,opts={}){
+  if(!CO.some(d=>d.s===name)) return false;
+  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name}); state.openSup.clear();
+  state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
+  if(FIT_MQ.matches) revealDetails();
+  document.dispatchEvent(new CustomEvent("scan:sector",{detail:{name,source:opts.source||"page"}}));
+  return true;
+}
+window.SCAN={openCompany,openSector,get ready(){return CO.length>0;},get companies(){return CO;},
+  get sectors(){return [...new Set(CO.map(d=>d.s).filter(Boolean))];}};
 function openResult(n){
   const it=sItems[n]; if(!it) return;
   if(it.type==="cap"){ select(it.k,null,{noScroll:true}); }
   else if(it.type==="co"){ openCompany(it.id,{source:"search"}); }
-  else {
-    Object.assign(state,{cap:null,zone:null,coSel:null,sector:it.s});
-    state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
-  }
+  else { openSector(it.s,{source:"search"}); }
   closeSearch();
   try{ if(window.clarity){window.clarity("event","search_result_open");window.clarity("set","last_search_type",it.type);} }catch(e){}
   try{ if(window.goatcounter&&window.goatcounter.count) window.goatcounter.count({path:"ev/search_result_open",title:"search_result_open",event:true}); }catch(e){}
@@ -1152,6 +1160,9 @@ const LINK = {
   apiUrl: "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js",
   keyFields: ["id", "supplier_name", "Supplier Name", "Supplier_Name", "Supplier",
               "Company", "Company Name", "Name"],
+  // Field that identifies an industry sector, for clicks on sector bars.
+  sectorFields: ["industry_sector", "Industry Sector", "Industry_Sector", "Industry Group",
+                 "Industry Groups", "Industry", "Sector"],
   sheets: [],             // worksheet to highlight in, first match wins; empty picks a map sheet
   loadTimeoutMs: 60000,   // no interactive viz by then means fall back to the standard embed
 };
@@ -1162,6 +1173,8 @@ const statusEl = document.getElementById("tablink");
 const dbgEl = document.getElementById("tabdebug");
 const IDLE = "Linked to the search box: choose a company there to highlight it here, "
            + "or click a single company in the dashboard to see its details in the search panel.";
+const IDLE_SECTORS = "Linked to the search box: choose a company there to highlight it here. "
+           + "Click a single company or an industry sector in the dashboard to see its details or its suppliers in the search panel.";
 
 const log = (...a) => { if (DEBUG) console.log("[SCAN link]", ...a); };
 const escH = s => String(s ?? "").replace(/[&<>"']/g,
@@ -1190,6 +1203,7 @@ function track(name, tags) {
 
 let api = null, viz = null, ready = false, failed = false, report = [];
 let targets = [];                       // worksheets that carry a company field
+let sectorTargets = [];                 // worksheets that carry an industry sector field
 let pending = null;                     // a company chosen before the dashboard was ready
 let echo = { value: null, until: 0 };   // our own highlight, so its event is ignored
 
@@ -1255,7 +1269,7 @@ function mount() {
 async function discover() {
   const active = viz.workbook.activeSheet;
   const sheets = active.sheetType === "dashboard" ? active.worksheets : [active];
-  report = []; targets = [];
+  report = []; targets = []; sectorTargets = [];
   for (const ws of sheets) {
     let table;
     try { table = await ws.getSummaryDataAsync({ ignoreSelection: true }); }
@@ -1265,8 +1279,14 @@ async function discover() {
     for (const k of LINK.keyFields) { idx = cols.findIndex(c => !isMeasure(c) && norm(bareField(c)) === norm(k)); if (idx >= 0) break; }
     const values = idx < 0 ? [] : [...new Set(table.data.map(r => r[idx] && r[idx].value)
       .filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%").map(String))];
-    report.push({ sheet: ws.name, fields: cols.join(", "), key: idx < 0 ? "none" : cols[idx], values: values.length });
+    let sidx = -1;
+    for (const k of LINK.sectorFields) { sidx = cols.findIndex(c => !isMeasure(c) && norm(bareField(c)) === norm(k)); if (sidx >= 0) break; }
+    const svalues = sidx < 0 ? [] : [...new Set(table.data.map(r => r[sidx] && r[sidx].value)
+      .filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%" && String(v).toLowerCase() !== "null").map(String))];
+    report.push({ sheet: ws.name, fields: cols.join(", "), key: idx < 0 ? "none" : cols[idx], values: values.length,
+                  sector: sidx < 0 ? "none" : cols[sidx], sectors: svalues.length });
     if (idx >= 0) targets.push({ ws, field: bareField(cols[idx]), values });
+    if (sidx >= 0) sectorTargets.push({ ws, field: bareField(cols[sidx]), values: svalues });
   }
   ready = true;
   log("worksheets:", report);
@@ -1289,9 +1309,23 @@ function link() {
       if (hits.length) t.toPage.set(v, hits[0]);
     }
   }
-  for (const r of report) { const t = targets.find(x => x.ws.name === r.sheet); r.matched = t ? t.toPage.size : 0; }
+  const sectorByNorm = new Map(window.SCAN.sectors.map(n => [norm(n), n]));
+  for (const t of sectorTargets) {
+    t.toPage = new Map();
+    for (const v of t.values) { const n = sectorByNorm.get(norm(v)); if (n) t.toPage.set(v, n); }
+  }
+  for (const r of report) {
+    const t = targets.find(x => x.ws.name === r.sheet); r.matched = t ? t.toPage.size : 0;
+    const st = sectorTargets.find(x => x.ws.name === r.sheet); r.sectorsMatched = st ? st.toPage.size : 0;
+  }
   targets = targets.filter(t => t.toPage.size > 0);         // a field that matches no company is not a company field
+  sectorTargets = sectorTargets.filter(t => t.toPage.size > 0);
   debugPanel();
+  if (!targets.length && sectorTargets.length) {
+    say("Click an industry sector in the dashboard to list its suppliers in the search panel. "
+      + "Companies aren't linked yet because the dashboard has no company field that matches the supplier list.", "muted");
+    return;
+  }
   if (!targets.length) {
     const found = report.filter(r => r.key !== "none");
     say(found.length
@@ -1299,7 +1333,7 @@ function link() {
       : `The dashboard is live, but none of its sheets has a company field (looked for ${LINK.keyFields.map(escH).join(", ")}), so it can't follow the search box yet.`, "muted");
     return;
   }
-  say(IDLE);
+  say(sectorTargets.length ? IDLE_SECTORS : IDLE);
   if (pending !== null) { const p = pending; pending = null; highlight(p); }
 }
 
@@ -1332,24 +1366,27 @@ async function highlight(id) {
 async function clearAll() {
   pending = null;
   if (!ready || failed) return;
-  const t = primary(); if (!t) return;
+  const t = primary(); if (!t) { if (sectorTargets.length) say("Click an industry sector in the dashboard to list its suppliers in the search panel.", "muted"); return; }
   echo = { value: null, until: Date.now() + 3000 };
   try { await t.ws.clearSelectedMarksAsync(); } catch (e) { log("clear failed", e); }
-  say(IDLE);
+  say(sectorTargets.length ? IDLE_SECTORS : IDLE);
 }
 
 /* ---------- viz to page ---------- */
+const colValues = (table, field) => {
+  const idx = table.columns.findIndex(c => !isMeasure(c.fieldName) && norm(bareField(c.fieldName)) === norm(field));
+  return idx < 0 ? [] : [...new Set(table.data.map(r => r[idx] && r[idx].value).filter(v => v !== null && v !== undefined && v !== "" && v !== "%null%").map(String))];
+};
 async function onMarks(ev) {
   if (!ready || failed) return;
   const ws = ev.detail && (ev.detail.worksheet || ev.detail.sheet); if (!ws) return;
-  const t = targets.find(x => x.ws.name === ws.name); if (!t || !t.toPage) return;
+  const t = targets.find(x => x.ws.name === ws.name), st = sectorTargets.find(x => x.ws.name === ws.name);
+  if (!t && !st) return;
   let table;
   try { table = (await ev.detail.getMarksAsync()).data[0]; } catch (e) { log("could not read marks", e); return; }
   if (!table || !table.data.length) return;                  // selection cleared
-  const idx = table.columns.findIndex(c => !isMeasure(c.fieldName) && norm(bareField(c.fieldName)) === norm(t.field));
-  if (idx < 0) return;
-  const values = [...new Set(table.data.map(r => r[idx] && r[idx].value).filter(v => v !== null && v !== undefined && v !== "").map(String))];
-  if (!values.length) return;
+  const values = t ? colValues(table, t.field) : [];
+  if (!values.length) { if (st) onSector(colValues(table, st.field), st); return; }   // no company in the marks: a sector bar
   if (values.length === 1 && echo.value === values[0] && Date.now() < echo.until) return;   // our own highlight
   if (values.length > 1) { say(`${values.length} companies are selected in the dashboard. Click a single company to see its details.`, "muted"); return; }
   const v = values[0], d = t.toPage.get(v);
@@ -1357,6 +1394,16 @@ async function onMarks(ev) {
   if (!d) { say(`<b>${escH(v)}</b> isn't in the supplier list, so there are no details to show.`, "muted"); return; }
   window.SCAN.openCompany(d.id, { source: "tableau" });
   say(`Showing <b>${escH(d.n)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
+}
+function onSector(values, st) {
+  if (!values.length) return;
+  if (values.length > 1) { say(`${values.length} sectors are selected in the dashboard. Click a single sector to list its suppliers.`, "muted"); return; }
+  const v = values[0], name = st.toPage.get(v);
+  track("tableau_sector_click", { tableau_sector: v });
+  if (!name) { say(`<b>${escH(v)}</b> isn't an industry sector in the supplier list, so there's nothing to list.`, "muted"); return; }
+  window.SCAN.openSector(name, { source: "tableau" });
+  const n = window.SCAN.companies.filter(d => d.s === name).length;
+  say(`Listing the ${n} suppliers in <b>${escH(name)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
 }
 
 /* ---------- diagnostics, only with ?scandebug=1 ---------- */
@@ -1368,8 +1415,8 @@ function debugPanel(reason) {
   let html = `<p><b>Viz:</b> ${escH(LINK.vizUrl)}<br><b>State:</b> ${failed ? "standard embed (no link)" : ready ? "linked" : "loading"}`
     + (reason ? `<br><b>Fallback reason:</b> ${escH(reason)}` : "") + `</p>`;
   if (report.length) {
-    html += `<table><thead><tr><th>Worksheet</th><th>Company field</th><th>Companies in sheet</th><th>Matched to page</th><th>All fields</th></tr></thead><tbody>`
-      + report.map(r => `<tr><td>${escH(r.sheet)}</td><td>${escH(r.key)}</td><td>${r.values}</td><td>${r.matched ?? 0}</td><td>${escH(r.fields)}</td></tr>`).join("")
+    html += `<table><thead><tr><th>Worksheet</th><th>Company field</th><th>Companies in sheet</th><th>Matched to page</th><th>Sector field</th><th>Sectors matched</th><th>All fields</th></tr></thead><tbody>`
+      + report.map(r => `<tr><td>${escH(r.sheet)}</td><td>${escH(r.key)}</td><td>${r.values}</td><td>${r.matched ?? 0}</td><td>${escH(r.sector || "none")}</td><td>${r.sectorsMatched ?? 0} of ${r.sectors ?? 0}</td><td>${escH(r.fields)}</td></tr>`).join("")
       + `</tbody></table>`;
     const t = primary();
     if (t && t.toPage) {
@@ -1388,7 +1435,8 @@ function debugPanel(reason) {
 document.addEventListener("scan:company", e => { if (e.detail && e.detail.source !== "tableau") highlight(e.detail.id); });
 document.addEventListener("scan:reset", clearAll);
 document.addEventListener("scan:dataready", link);
-window.SCANLink = { get state() { return { ready, failed, pending, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })), report }; } };
+window.SCANLink = { get state() { return { ready, failed, pending, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })),
+  sectorTargets: sectorTargets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })), report }; } };
 if (host) start();
 </script>
 

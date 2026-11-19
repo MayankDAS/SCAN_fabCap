@@ -101,8 +101,28 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
   const before = await shown(page);
   await viz(page, () => document.querySelector("tableau-viz")._userClick("Supplier Map", [])); await sleep(400);
   check((await shown(page)) === before, "clearing the selection in the map leaves the page alone");
-  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["Advanced Manufacturing"])); await sleep(400);
-  check((await shown(page)) === before, "clicking a sector bar does not open a company");
+  /* sector bars */
+  const s1 = await st(page);
+  const bars = s1.sectorTargets.find(x => x.sheet === "Sector Bars");
+  check(bars && bars.field === "industry_sector" && bars.matched === bars.values && bars.values > 20,
+        "finds the sector bar sheet and matches every sector", JSON.stringify(s1.sectorTargets));
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["Advanced Manufacturing"])); await sleep(500);
+  const sec = await page.evaluate(() => ({ eyebrow: document.querySelector("#capinfo .eyebrow")?.textContent, h3: document.querySelector("#capinfo h3")?.textContent,
+    rows: document.querySelectorAll("#capinfo .srow").length, expect: window.SCAN.companies.filter(d => d.s === "Advanced Manufacturing").length }));
+  check(/sector/i.test(sec.eyebrow) && sec.h3 === "Advanced Manufacturing" && sec.rows === sec.expect && sec.rows > 0,
+        "clicking a sector bar lists that sector's suppliers", JSON.stringify(sec));
+  check((await status(page)).startsWith(`Listing the ${sec.expect} suppliers in Advanced Manufacturing`), "status says how many suppliers are listed", await status(page));
+  const sclar = await page.evaluate(() => (window.clarity && window.clarity.q || []).map(a => [...a]).filter(a => a[1] === "tableau_sector_click" || a[1] === "tableau_sector"));
+  check(sclar.some(a => a[1] === "tableau_sector_click") && sclar.some(a => a[1] === "tableau_sector" && a[2] === "Advanced Manufacturing"), "sector clicks are logged to Clarity", JSON.stringify(sclar));
+  const selBefore = (await mlog(page)).filter(x => x.op === "select").length;
+  await sleep(300);
+  check((await mlog(page)).filter(x => x.op === "select").length === selBefore, "a sector click is not pushed back to the dashboard");
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["Advanced Manufacturing", "Optics & Photonics"])); await sleep(400);
+  check((await status(page)).startsWith("2 sectors are selected"), "several bars ask for a single sector", await status(page));
+  check((await shown(page)) === "Advanced Manufacturing", "several bars leave the current list alone");
+  const any = await page.evaluate(() => window.SCAN.companies[0].n);
+  await viz(page, n => document.querySelector("tableau-viz")._userClick("Supplier Map", [n]), any); await sleep(400);
+  check((await shown(page)) === any, "a company click on the map still opens the company, not its sector", await shown(page));
 
   /* 7. reset clears the highlight */
   await page.click("#resetbtn"); await sleep(400);
@@ -162,14 +182,28 @@ const viz = (page, fn, ...args) => page.evaluate(fn, ...args);
 /* 13. no company field at all */
 { const { page } = await open({ noKey: true });
   await waitReady(page);
-  check((await status(page)).includes("none of its sheets has a company field"), "explains when the dashboard has no company field", await status(page));
+  check((await status(page)).includes("no company field"), "with only sector bars, says sectors work and companies don't", await status(page));
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["Optics & Photonics"])); await sleep(500);
+  check((await shown(page)) === "Optics & Photonics", "with only sector bars, a bar still lists its suppliers", await shown(page));
+  await page.close(); }
+
+/* 13b. sector names matched loosely, unknown sector reported */
+{ const { page } = await open({ sectorCol: "Industry Group", sectorXform: "return n.toUpperCase()", extraSector: "Basket Weaving" });
+  await waitReady(page); const s = await st(page);
+  const grp = s.sectorTargets.find(x => x.sheet === "Sector Bars");
+  check(grp && grp.field === "Industry Group" && grp.matched === grp.values - 1,
+        "an 'Industry Group' field in capitals still matches the page's sectors", JSON.stringify(s.sectorTargets));
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["OPTICS & PHOTONICS"])); await sleep(500);
+  check((await shown(page)) === "Optics & Photonics", "a capitalised sector opens the page's sector", await shown(page));
+  await viz(page, () => document.querySelector("tableau-viz")._userClick("Sector Bars", ["Basket Weaving"])); await sleep(400);
+  check((await status(page)).includes("isn't an industry sector in the supplier list"), "an unknown sector says so", await status(page));
   await page.close(); }
 
 /* 14. debug panel */
 { const { page } = await open({}, "?scandebug=1");
   await waitReady(page); await sleep(300);
   const dbg = await page.evaluate(() => { const d = document.getElementById("tabdebug"); return { shown: !d.hidden, rows: d.querySelectorAll("tbody tr").length, text: d.textContent }; });
-  check(dbg.shown && dbg.rows === 2 && dbg.text.includes("Supplier Map") && dbg.text.includes("CNT(supplier_name)"), "?scandebug=1 lists every worksheet and its fields", `rows ${dbg.rows}`);
+  check(dbg.shown && dbg.rows === 2 && dbg.text.includes("Supplier Map") && dbg.text.includes("CNT(supplier_name)") && dbg.text.includes("Sector field"), "?scandebug=1 lists every worksheet, its company and sector fields", `rows ${dbg.rows}`);
     await page.close(); }
 
 /* 15. fallbacks keep the dashboard */

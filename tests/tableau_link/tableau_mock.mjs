@@ -32,9 +32,11 @@ export class TableauViz extends HTMLElement {
       async () => (await data()).filter((r, i) => !(CFG.dropEvery && i % CFG.dropEvery === 0))
         .map(r => ({ [nameCol]: CFG.useId ? r.id : xform(r.supplier_name), industry_sector: r.industry_sector, Latitude: r.latitude, Longitude: r.longitude }))
         .concat(CFG.extra ? CFG.extra.map(n => ({ [nameCol]: n, industry_sector: "Other" })) : []));
-    const bars = new Worksheet(this, "Sector Bars", ["industry_sector", "CNT(supplier_name)"], async () => {
+    const sectorCol = CFG.sectorCol || "industry_sector", sx = CFG.sectorXform ? new Function("n", CFG.sectorXform) : (n => n);
+    const bars = new Worksheet(this, "Sector Bars", [sectorCol, "CNT(supplier_name)"], async () => {
       const m = {}; for (const r of await data()) m[r.industry_sector] = (m[r.industry_sector] || 0) + 1;
-      return Object.entries(m).map(([k, v]) => ({ industry_sector: k, "CNT(supplier_name)": v }));
+      return Object.entries(m).map(([k, v]) => ({ [sectorCol]: sx(k), "CNT(supplier_name)": v }))
+        .concat(CFG.extraSector ? [{ [sectorCol]: CFG.extraSector, "CNT(supplier_name)": 3 }] : []);
     });
     this._sheets = CFG.noKey ? [bars] : [map, bars];
   }
