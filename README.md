@@ -49,3 +49,15 @@ paste the sheet into the master workbook as a tab named `Capability_Map`.
 Rerun with `--existing data/capability_map.xlsx` to keep approvals when new
 phrases appear. Suppliers with no key still appear in search and lists; they
 just do not light a zone.
+
+# Validation
+
+Every check the dashboard needs before a change goes live is in [tests/VALIDATION.md](tests/VALIDATION.md):
+when to run each one, how, and what a pass looks like. Two suites run automatically:
+
+```bash
+python3 tests/check_published_data.py              # data and privacy checks on what is published
+node tests/tableau_link/link.test.mjs              # page and Tableau link tests (see the file header)
+```
+
+Both must pass with no failures before a merge to `main`.
