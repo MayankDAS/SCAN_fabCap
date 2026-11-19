@@ -581,6 +581,10 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   .q-fab #listview{flex:1;min-height:0;overflow:auto}
   .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
 }
+/* Sponsor logos link to their sites */
+.sponsorlink{display:block;border-radius:8px;transition:opacity .15s,transform .15s}
+.sponsorlink:hover{opacity:.85;transform:translateY(-1px)}
+.sponsorlink:focus-visible{outline:2px solid #fff;outline-offset:4px}
 /* "How to use" cards float over their panel instead of taking space in it */
 .dash>.panel{position:relative}
 .dash .howto.helppop{position:absolute;right:14px;z-index:50;width:max-content;max-width:min(480px,calc(100% - 28px));
@@ -626,9 +630,9 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
     <div class="sponsors" aria-label="Sponsors">
       <span class="eyebrow"></span>
       <div class="logos">
-        <img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee" width="768" height="198">
+        <a class="sponsorlink" href="https://nysmarticorridor.com/" target="_blank" rel="noopener"><img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee (opens in a new tab)" width="768" height="198"></a>
         <span class="sep" aria-hidden="true"></span>
-        <img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management" width="656" height="240">
+        <a class="sponsorlink" href="https://management.buffalo.edu/centers/center-for-supply-chain-analytics.html" target="_blank" rel="noopener"><img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management (opens in a new tab)" width="656" height="240"></a>
       </div>
     </div>
     <button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark theme">
