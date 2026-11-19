@@ -1010,7 +1010,7 @@ function renderCapInfo(){
       <div class="where"><span>Capabilities:</span>${caps.map(c=>`<button type="button" class="chip2" data-k="${c.k}">${esc(c.n)}</button>`).join("")}</div>
       ${supplierBlock(arr)}`;
   } else {
-    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>No selection yet</h3><p class="help">Suppliers for the capability or zone you pick appear here.</p></div>`;
+    el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>No selection yet</h3><p class="help">Companies, industry sectors and capability details appear here upon selection.</p></div>`;
   }
   el.querySelectorAll(".chip2[data-z]").forEach(b=>b.onclick=()=>select(null,b.dataset.z));
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
