@@ -500,13 +500,13 @@ footer{font-size:14.5px}
 .nodata{color:var(--ink2);font-size:14.5px}
 
 /* Sponsor logos, right side of the title band */
-.sponsors{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
-.sponsors .logos{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:14px 22px}
-.sponsors img{height:58px;width:auto;display:block}
-.sponsors img.ub{height:72px}
-.sponsors .sep{width:1px;height:52px;background:rgba(255,255,255,.35)}
-@media (max-width:760px){.sponsors{align-items:flex-start;margin-left:0}.sponsors .logos{justify-content:flex-start}}
-@media (max-width:520px){.sponsors img{height:40px}.sponsors img.ub{height:52px}.sponsors .sep{display:none}}
+.herologos{display:flex;flex-direction:column;align-items:flex-end;gap:10px;margin-left:auto}
+.herologos .logos{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:14px 22px}
+.herologos img{height:58px;width:auto;display:block}
+.herologos img.ub{height:72px}
+.herologos .sep{width:1px;height:52px;background:rgba(255,255,255,.35)}
+@media (max-width:760px){.herologos{align-items:flex-start;margin-left:0}.herologos .logos{justify-content:flex-start}}
+@media (max-width:520px){.herologos img{height:40px}.herologos img.ub{height:52px}.herologos .sep{display:none}}
 
 /* Tableau dashboard and its link to the page */
 .tabhost{position:relative;min-height:200px}
@@ -553,8 +553,8 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   header h1{font-size:clamp(22px,1.75vw,30px)}
   header .ttl{max-width:none}
   header .themebtn{top:calc(50% - 17px)}
-  .sponsors{flex-direction:row;align-items:center;gap:0}
-  .sponsors img{height:38px}.sponsors img.ub{height:46px}.sponsors .sep{height:38px}
+  .herologos{flex-direction:row;align-items:center;gap:0}
+  .herologos img{height:38px}.herologos img.ub{height:46px}.herologos .sep{height:38px}
   /* 12 columns: search 5 and Tableau 7 on top, fab 6 and capability groups 6 below */
   .dash{flex:none;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));
         grid-template-rows:max(500px,66.7vh) max(440px,50vh);
@@ -581,10 +581,13 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   .q-fab #listview{flex:1;min-height:0;overflow:auto}
   .q-caps .caps{flex:1;min-height:0;overflow:auto;columns:auto 300px;padding-right:4px}
 }
-/* Sponsor logos link to their sites */
-.sponsorlink{display:block;border-radius:8px;transition:opacity .15s,transform .15s}
-.sponsorlink:hover{opacity:.85;transform:translateY(-1px)}
-.sponsorlink:focus-visible{outline:2px solid #fff;outline-offset:4px}
+/* Sponsor logos link to their sites. The class names avoid the word "sponsor": ad blockers hide
+   elements named like .herolink or .herologos, which made both logos disappear for their users. */
+.herolink{display:block;flex:none;line-height:0;border-radius:8px;transition:opacity .15s,transform .15s}
+/* Logos are sized by height, so the global img{max-width:100%} is lifted for them. */
+.herologos img{max-width:none}
+.herolink:hover{opacity:.85;transform:translateY(-1px)}
+.herolink:focus-visible{outline:2px solid #fff;outline-offset:4px}
 /* "How to use" cards float over their panel instead of taking space in it */
 .dash>.panel{position:relative}
 .dash .howto.helppop{position:absolute;right:14px;z-index:50;width:max-content;max-width:min(480px,calc(100% - 28px));
@@ -627,12 +630,12 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   <div class="fit">
   <header>
     <div class="ttl"><h1>Supply Chain Activation Network (SCAN) Dashboard 2.0</h1></div>
-    <div class="sponsors" aria-label="Sponsors">
+    <div class="herologos" aria-label="Sponsors">
       <span class="eyebrow"></span>
       <div class="logos">
-        <a class="sponsorlink" href="https://nysmarticorridor.com/" target="_blank" rel="noopener"><img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee (opens in a new tab)" width="768" height="198"></a>
+        <a class="herolink" href="https://nysmarticorridor.com/" target="_blank" rel="noopener"><img src="assets/nysmart_techhubs_white.png" alt="NY SMART I-Corridor, Tech Hubs official awardee (opens in a new tab)" width="768" height="198"></a>
         <span class="sep" aria-hidden="true"></span>
-        <a class="sponsorlink" href="https://management.buffalo.edu/centers/center-for-supply-chain-analytics.html" target="_blank" rel="noopener"><img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management (opens in a new tab)" width="656" height="240"></a>
+        <a class="herolink" href="https://management.buffalo.edu/centers/center-for-supply-chain-analytics.html" target="_blank" rel="noopener"><img class="ub" src="assets/ub_csca_white.png" alt="University at Buffalo Center for Supply Chain Analytics, School of Management (opens in a new tab)" width="656" height="240"></a>
       </div>
     </div>
     <button class="themebtn" id="themebtn" type="button" aria-label="Switch to dark theme">
