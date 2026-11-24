@@ -49,3 +49,15 @@ paste the sheet into the master workbook as a tab named `Capability_Map`.
 Rerun with `--existing data/capability_map.xlsx` to keep approvals when new
 phrases appear. Suppliers with no key still appear in search and lists; they
 just do not light a zone.
+
+# Export: PDF, email and share
+
+When a company, industry sector, capability or fab zone is selected, the details panel shows **Download PDF** and **Email** buttons (plus **Share** on devices that can share files, such as most phones).
+
+* **Download PDF** saves the list on screen: same companies, same sort order, same "only suppliers with a capability statement" filter. Lists get a summary table and then one detail block per company; a single company gets its profile. Only the public fields the page already shows are printed; contact email stays withheld.
+* **Email** saves the PDF and opens a draft in the visitor's mail app with the list, a link back to this exact view and a reminder to attach the saved PDF. A static page cannot send email itself and a mailto link cannot carry an attachment, so attaching is the visitor's step.
+* **Share** hands the PDF to the device's share menu (Mail, Messages, Teams and so on).
+* Every PDF and email links back with a deep link: `?company=<id>`, `?sector=<name>`, `?capability=<key>` or `?zone=<key>`.
+* The PDF libraries (jsPDF 4.2.1 and jsPDF AutoTable 5.0.9, MIT licensed) live in `assets/vendor/` and load only on the first export.
+* Clarity events: `pdf_download`, `email_share`, `share_sheet`, with tag `export_kind`.
+* Tests: `tests/export/export.test.mjs` (37 checks, headless Chrome plus pypdf).

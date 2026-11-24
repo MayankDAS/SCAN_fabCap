@@ -605,6 +605,15 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
 .backbtn{align-self:flex-start;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:5px 12px;font:700 14px var(--body);cursor:pointer}
 .backbtn:hover{filter:brightness(1.05)}
 .backbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* Export bar: PDF download and email for the list on screen */
+.xbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0 4px}
+.xbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:5px 11px;font:700 13.5px var(--body);cursor:pointer}
+.xbtn svg{width:15px;height:15px;flex:none}
+.xbtn:hover{border-color:var(--accent);color:var(--accent)}
+.xbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.xbtn[aria-busy="true"]{opacity:.65;cursor:progress}
+.xstatus{flex-basis:100%;font:500 12.5px/1.4 var(--body);color:var(--muted);min-height:0}
+.xstatus:empty{display:none}
 /* ===== Feedback pass ===== */
 .capgroup .cap:hover{background:var(--soft)}
 .sresults .sicon,.sicon.k1,.sicon.k2,.sicon.k3{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
@@ -1019,6 +1028,7 @@ function renderCapInfo(){
   } else {
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Suppliers</div><h3>No selection yet</h3><p class="help">Companies, industry sectors and capability details appear here upon selection.</p></div>`;
   }
+  addExportBar(el);
   el.querySelectorAll(".chip2[data-z]").forEach(b=>b.onclick=()=>select(null,b.dataset.z));
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
   bindRows(el);
@@ -1165,6 +1175,200 @@ document.addEventListener("click",e=>{if(!e.target.closest(".sbox")) closeSearch
 /* ---------- reset ---------- */
 $("#resetbtn").onclick=()=>{clearSearch();Object.assign(state,{coSel:null,sector:null,cap:null,zone:null,back:null,sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});renderAll();document.dispatchEvent(new Event("scan:reset"));$("#resetbtn").focus();};
 
+/* ===========================================================================
+   Export: download the list on screen as a PDF, email it, or share it.
+
+   The PDF holds exactly what the details panel shows: the same companies, in
+   the same sort order, with the same "only suppliers with a statement" filter,
+   and only the public fields the page already displays.
+
+   A static page cannot send email itself and a mailto: link cannot carry an
+   attachment. So "Email" saves the PDF and opens a draft in the visitor's mail
+   app with the list summary and a link back to this exact view; the visitor
+   attaches the saved PDF. Where the browser can share files (most phones, some
+   desktops), "Share" hands the PDF straight to the system share sheet, which
+   includes Mail.
+
+   The PDF libraries (jsPDF and jsPDF AutoTable, MIT licensed) are kept in
+   assets/vendor and load only on the first export.
+   =========================================================================== */
+const PAGE_TITLE="Supply Chain Activation Network (SCAN) Dashboard 2.0";
+const XICON={
+  pdf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+  mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.4M8.2 13.2l7.6 4.4"/></svg>'};
+const canShareFiles=()=>{try{return !!(navigator.canShare&&navigator.share&&navigator.canShare({files:[new File(["x"],"x.pdf",{type:"application/pdf"})]}));}catch(e){return false;}};
+
+/* What the details panel shows right now, as plain data */
+function currentSelection(){
+  const sortLabel=(SORTS.find(s=>s[0]===state.sort)||SORTS[0])[1]();
+  const base=location.origin+location.pathname;
+  const mk=(kind,title,about,all,param,value)=>{
+    const items=kind==="Company"?all:sortSup(all);
+    return {kind,title,about,items,total:all.length,sortLabel,filtered:kind!=="Company"&&state.stmtOnly,
+      link:`${base}?${param}=${encodeURIComponent(value)}`};};
+  if(state.coSel!=null){const d=CO[state.coSel]; return mk("Company",d.n,"",[d],"company",d.sid||d.n);}
+  if(state.sector) return mk("Industry sector",state.sector,"",CO.filter(d=>d.s===state.sector),"sector",state.sector);
+  if(state.cap){const c=CAPS.find(x=>x.k===state.cap); return mk("Capability",c.n,CAP_HELP[c.k]||"",CO.filter(d=>d.c.includes(c.k)),"capability",c.k);}
+  if(state.zone) return mk(`Fab zone ${ZNUM[state.zone]}`,ZONES[state.zone].n,ZONE_HELP[state.zone]||"",zoneSuppliers(state.zone),"zone",state.zone);
+  return null;
+}
+function addExportBar(el){
+  const sel=currentSelection(); if(!sel||!sel.items.length) return;
+  const head=el.querySelector(".ihead"); if(!head) return;
+  const what=sel.kind==="Company"?"this company":`these ${sel.items.length} companies`;
+  head.insertAdjacentHTML("afterend",`<div class="xbar" role="group" aria-label="Export ${esc(what)}">
+    <button type="button" class="xbtn" data-x="pdf" title="Download ${esc(what)} and their details as a PDF">${XICON.pdf}Download PDF</button>
+    <button type="button" class="xbtn" data-x="mail" title="Save the PDF and open an email draft with a link to this view">${XICON.mail}Email</button>
+    ${canShareFiles()?`<button type="button" class="xbtn" data-x="share" title="Share the PDF through your device's share menu">${XICON.share}Share</button>`:""}
+    <p class="xstatus" role="status" aria-live="polite"></p></div>`);
+  el.querySelectorAll(".xbtn").forEach(b=>b.onclick=()=>runExport(b.dataset.x,b));
+}
+
+let pdfLibs=null;
+function loadScript(src){return new Promise((ok,bad)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>bad(new Error("could not load "+src));document.head.appendChild(s);});}
+function loadPdfLibs(){
+  if(!pdfLibs) pdfLibs=loadScript("assets/vendor/jspdf.umd.min.js")
+    .then(()=>loadScript("assets/vendor/jspdf.plugin.autotable.min.js"))
+    .then(()=>{ if(!window.jspdf||!window.jspdf.jsPDF||typeof window.autoTable!=="function") throw new Error("PDF library did not start"); return {jsPDF:window.jspdf.jsPDF,autoTable:window.autoTable}; })
+    .catch(e=>{pdfLibs=null;throw e;});
+  return pdfLibs;
+}
+/* The built in PDF fonts cover Latin 1 only: swap typographic marks for plain ones */
+const pdfText=s=>String(s==null?"":s).replace(/[‘’‚]/g,"'").replace(/[“”„]/g,'"')
+  .replace(/[–—−]/g,"-").replace(/…/g,"...").replace(/[•●]/g,"·").replace(/ /g," ")
+  .normalize("NFKD").replace(/[̀-ͯ]/g,"").replace(/[^\x09\x0A\x0D\x20-\x7E -ÿ]/g,"");
+const lc1=s=>s.charAt(0).toLowerCase()+s.slice(1);
+const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,48)||"selection";
+const today=()=>{const d=new Date();return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`;};
+const pdfName=sel=>`SCAN_${slug(sel.kind==="Company"?"company":sel.kind)}_${slug(sel.title)}_${today()}.pdf`;
+
+/* Rows for one company, mirroring the profile shown on the page */
+function detailRows(d){
+  const ref=REFS[state.ref], where=[d.city,d.county?d.county+" County":"",d.st].filter(Boolean).join(" · "), R=[];
+  if(d.w) R.push(["Website",d.w,d.href]);
+  if(d.statement) R.push(["Capability statement","Open document",d.statement]);
+  R.push(["Address",d.a||"Not recorded",d.maps||null]);
+  R.push(["Contact",d.contact||"Via website contact page"]);
+  if(sited(d)) R.push(["Distance",`${Math.round(miles(ref,d)).toLocaleString()} miles from ${ref.s}`]);
+  R.push(["Corridor",sited(d)?(inCorridor(d)?"Inside the NY SMART I-Corridor":"Outside the NY SMART I-Corridor"):"Location not recorded"]);
+  R.push(["Tier",TIERN[d.t]||"Unclassified"]);
+  R.push(["Sector",d.s]); if(d.type) R.push(["Type",d.type]); if(where) R.push(["Location",where]);
+  if(d.prim.length) R.push(["Primary",d.prim.join("; ")]);
+  if(d.sec.length) R.push(["Also does",d.sec.join("; ")]);
+  R.push(["Fab capability",d.c.length?d.c.map(k=>CAPN[k]||k).join("; "):"Not mapped to a fab capability"]);
+  return R;
+}
+async function buildPdf(sel){
+  const {jsPDF,autoTable}=await loadPdfLibs();
+  const doc=new jsPDF({unit:"pt",format:"letter"}), W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
+  const NAVY=[11,30,58], BLUE=[31,111,235], GREY=[86,108,138], LINE=[216,228,242];
+  const T=pdfText, made=new Date();
+  doc.setProperties({title:T(`${PAGE_TITLE}: ${sel.title}`),subject:T(`${sel.kind}: ${sel.title}`),author:"UB Center for Supply Chain Analytics",creator:"SCAN Dashboard 2.0"});
+  /* header band */
+  doc.setFillColor(...NAVY); doc.rect(0,0,W,58,"F");
+  doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.text(T(PAGE_TITLE),M,27);
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.text("UB Center for Supply Chain Analytics  ·  NY SMART I-Corridor Tech Hub",M,44);
+  /* selection summary */
+  let y=86;
+  doc.setTextColor(...GREY); doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.text(T(sel.kind.toUpperCase()),M,y);
+  y+=18; doc.setTextColor(...NAVY); doc.setFontSize(17); const tl=doc.splitTextToSize(T(sel.title),W-2*M); doc.text(tl,M,y); y+=tl.length*20;
+  doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.setTextColor(60,84,117);
+  const counts=sel.kind==="Company"?TIERN[sel.items[0].t]||"Unclassified":`${sel.items.length} ${sel.items.length===1?"company":"companies"} · ${tiersIn(sel.items).map(t=>`${sel.items.filter(d=>d.t===t).length} ${TIERN[t]}`).join(" · ")}`;
+  doc.text(T(counts),M,y); y+=14;
+  if(sel.about){const ab=doc.splitTextToSize(T(sel.about),W-2*M); doc.text(ab,M,y); y+=ab.length*13;}
+  const notes=[];
+  if(sel.kind!=="Company") notes.push(`Sorted by ${lc1(sel.sortLabel)}.`);
+  if(sel.filtered) notes.push(`Showing only suppliers with a capability statement (${sel.items.length} of ${sel.total}).`);
+  notes.push(`Generated ${made.toLocaleString(undefined,{dateStyle:"medium",timeStyle:"short"})} from data version ${META.data_version||"unknown"}.`);
+  doc.setFontSize(9); doc.setTextColor(...GREY);
+  doc.splitTextToSize(T(notes.join(" ")),W-2*M).forEach(l=>{doc.text(l,M,y);y+=12;});
+  doc.setTextColor(...BLUE); doc.textWithLink("Open this view in the dashboard",M,y,{url:sel.link}); y+=10;
+  doc.setDrawColor(...LINE); doc.line(M,y,W-M,y); y+=14;
+
+  const linkHook=data=>{const u=data.cell.raw&&data.cell.raw.url; if(data.section==="body"&&u) doc.link(data.cell.x,data.cell.y,data.cell.width,data.cell.height,{url:u});};
+  const base={margin:{left:M,right:M,top:50,bottom:46},styles:{font:"helvetica",fontSize:8.5,cellPadding:4,textColor:[20,36,60],lineColor:LINE,lineWidth:.5,overflow:"linebreak"},
+    headStyles:{fillColor:[226,237,253],textColor:NAVY,fontStyle:"bold"}};
+  /* summary table for lists */
+  if(sel.kind!=="Company"){
+    doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY); doc.text("Summary",M,y); y+=8;
+    autoTable(doc,{...base,startY:y,
+      head:[["#","Company","Tier","Location","Sector","Distance","Statement"]],
+      body:sel.items.map((d,i)=>[String(i+1),T(d.n),T(TIERN[d.t]||""),T(loc(d)),T(d.s),T(sited(d)?distTxt(d):"No location"),
+        d.statement?{content:"Yes",url:d.statement,styles:{textColor:BLUE}}:"No"]),
+      columnStyles:{0:{cellWidth:22,halign:"right"},1:{cellWidth:130,fontStyle:"bold"},2:{cellWidth:56},5:{cellWidth:52,halign:"right"},6:{cellWidth:50}},
+      didDrawCell:linkHook});
+    y=doc.lastAutoTable.finalY+22;
+  }
+  /* one detail block per company */
+  doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(...NAVY);
+  if(sel.kind!=="Company"){ if(y>H-120){doc.addPage();y=56;} doc.text("Company details",M,y); y+=14; }
+  sel.items.forEach((d,i)=>{
+    if(y>H-140){doc.addPage();y=56;}
+    doc.setFont("helvetica","bold"); doc.setFontSize(sel.kind==="Company"?12:11); doc.setTextColor(...NAVY);
+    const nm=doc.splitTextToSize(T(sel.kind==="Company"?"Details":`${i+1}. ${d.n}`),W-2*M); doc.text(nm,M,y); y+=nm.length*13-6;
+    autoTable(doc,{...base,startY:y,theme:"plain",showHead:"never",
+      body:detailRows(d).map(([k,v,u])=>[{content:k,styles:{fontStyle:"bold",textColor:GREY}},u?{content:T(v),url:u,styles:{textColor:BLUE}}:T(v)]),
+      columnStyles:{0:{cellWidth:110}},styles:{...base.styles,lineWidth:0,cellPadding:{top:2.5,bottom:2.5,left:4,right:4}},
+      didParseCell:data=>{ if(data.row.index%2===0) data.cell.styles.fillColor=[246,249,253]; },
+      didDrawCell:linkHook});
+    y=doc.lastAutoTable.finalY+18;
+  });
+  /* footer on every page */
+  const n=doc.getNumberOfPages();
+  for(let p=1;p<=n;p++){doc.setPage(p);
+    doc.setDrawColor(...LINE); doc.line(M,H-34,W-M,H-34);
+    doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(...GREY);
+    doc.text(T("Public fields from the SCAN dashboard. Please confirm details with each supplier before relying on them."),M,H-22);
+    doc.text(`Page ${p} of ${n}`,W-M,H-22,{align:"right"});}
+  return doc.output("blob");
+}
+function saveBlob(blob,name){
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=name; a.rel="noopener"; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+function mailtoFor(sel,name){
+  const subj=`SCAN supplier list: ${sel.title}${sel.kind==="Company"?"":` (${sel.items.length} companies)`}`;
+  const top=sel.items.slice(0,15).map((d,i)=>`${i+1}. ${d.n} (${TIERN[d.t]||"Unclassified"}, ${loc(d)})`);
+  const more=sel.items.length>15?[`...and ${sel.items.length-15} more in the attached PDF.`]:[];
+  const body=[`${sel.kind}: ${sel.title}`, sel.kind==="Company"?"":`${sel.items.length} companies, sorted by ${lc1(sel.sortLabel)}.`,"",
+    ...top,...more,"",`Open this view in the dashboard: ${sel.link}`,"",
+    `Full details are in the attached PDF (${name}).`,"",`Sent from the ${PAGE_TITLE}.`].filter((l,i,a)=>!(l===""&&a[i-1]===""));
+  return `mailto:?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body.join("\n"))}`;
+}
+async function runExport(how,btn){
+  const sel=currentSelection(); if(!sel||!sel.items.length) return;
+  const bar=btn.closest(".xbar"), status=bar&&bar.querySelector(".xstatus"), say=t=>{if(status) status.textContent=t;};
+  btn.setAttribute("aria-busy","true"); say("Preparing the PDF…");
+  try{
+    const blob=await buildPdf(sel), name=pdfName(sel);
+    if(how==="share"){
+      const file=new File([blob],name,{type:"application/pdf"});
+      try{ await navigator.share({files:[file],title:`SCAN: ${sel.title}`,text:`${sel.kind}: ${sel.title}. Open the view: ${sel.link}`}); say("Shared."); }
+      catch(e){ if(e&&e.name==="AbortError"){say("");} else {saveBlob(blob,name); say(`Sharing is not available here, so the PDF was saved as ${name}.`);} }
+    } else {
+      saveBlob(blob,name);
+      if(how==="mail"){ const a=document.createElement("a"); a.href=mailtoFor(sel,name); document.body.appendChild(a); a.click(); a.remove();
+        say(`PDF saved as ${name}. Attach it to the email draft that opened. If no draft opened, set up a default mail app or attach the file yourself.`); }
+      else say(`PDF saved as ${name}.`);
+    }
+    try{ if(window.clarity){ window.clarity("event",{pdf:"pdf_download",mail:"email_share",share:"share_sheet"}[how]); window.clarity("set","export_kind",sel.kind); } }catch(e){}
+  }catch(err){ say(`Could not make the PDF: ${err.message}. Please try again.`); }
+  finally{ btn.removeAttribute("aria-busy"); }
+}
+window.SCANExport={currentSelection,buildPdf,mailtoFor,pdfName};
+
+/* Deep links: ?company=<id>, ?sector=<name>, ?capability=<key> or ?zone=<key>
+   open that view on load. The PDF and the email carry these links. */
+function applyDeepLink(){
+  const p=new URLSearchParams(location.search);
+  const co=p.get("company"), se=p.get("sector"), ca=p.get("capability"), zo=p.get("zone");
+  if(co){const d=CO.find(x=>x.sid===co)||CO.find(x=>x.n.toLowerCase()===co.toLowerCase()); if(d) return openCompany(d.id,{source:"link"});}
+  if(se){const s=[...new Set(CO.map(d=>d.s))].find(x=>x.toLowerCase()===se.toLowerCase()); if(s) return openSector(s,{source:"link"});}
+  if(ca&&CAPS.some(c=>c.k===ca)) return select(ca,null,{noScroll:true});
+  if(zo&&ZONES[zo]) return select(null,zo,{noScroll:true});
+}
 
 function stampFooter(){
   const el=$("#datanote"); if(!el) return;
@@ -1185,6 +1389,7 @@ async function init(){
     if(!CO.length) throw new Error("the file contains no supplier records");
     stampFooter(); renderAbout(); renderAll();
     document.dispatchEvent(new Event("scan:dataready"));
+    try{ applyDeepLink(); }catch(e){ console.warn("SCAN deep link:",e); }
   }catch(err){
     renderZones();
     $("#capinfo").innerHTML=`<p class="help"><b>Could not load supplier data.</b><br><code>${esc(DATA_URL)}</code>: ${esc(err.message)}.<br><br>`
