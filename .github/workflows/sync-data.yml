@@ -1,0 +1,55 @@
+name: Update data from the master Google Sheet
+
+# One step update: edit the master Google Sheet, then either wait for the
+# nightly run or press "Run workflow" on the Actions tab. This job rebuilds the
+# page data (committed to main, so GitHub Pages updates) and rewrites the
+# published Google Sheet that Tableau Public refreshes from once a day.
+on:
+  schedule:
+    - cron: "17 7 * * *"    # 07:17 UTC = 2:17 AM Eastern (3:17 AM during daylight saving)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish even if no supplier changed"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-data
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+      MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
+      PUBLISHED_SHEET_ID: ${{ secrets.PUBLISHED_SHEET_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pandas openpyxl google-auth requests
+      - name: Check secrets
+        run: |
+          for s in GOOGLE_SERVICE_ACCOUNT_JSON MASTER_SHEET_ID PUBLISHED_SHEET_ID; do
+            [ -n "${!s}" ] || { echo "Missing secret $s"; exit 1; }
+          done
+      - name: Build and publish
+        id: sync
+        run: python scripts/sync_google.py ${{ inputs.force && '--force' || '' }}
+      - name: Build report
+        if: always()
+        run: '[ -f build_report.txt ] && cat build_report.txt >> "$GITHUB_STEP_SUMMARY" || true'
+      - name: Commit page data
+        if: steps.sync.outputs.changed == 'true'
+        run: |
+          git config user.name  "SCAN data bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/suppliers.json tableau/suppliers.xlsx tableau/supplier_capabilities.xlsx
+          git diff --cached --quiet && { echo "No file changes"; exit 0; }
+          git commit -m "Data update from the master Google Sheet ($(date -u +%Y-%m-%d))"
+          git push
