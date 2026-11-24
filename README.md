@@ -73,3 +73,19 @@ Clicking a tier tile in the Tableau dashboard (the KPI sheets: Tier 1, Tier 2, T
 * Deep link: `?tier=2` or `?tier=Support%20Organization` opens the list and highlights its tile.
 * Clarity events: `tableau_tier_click` (tag `tableau_tier`), `tableau_tier_clear`.
 * Tests: `tests/tableau_link/tier.test.mjs` (33 checks; the Fab tile lists the fabs).
+
+# One step data update (Google Sheet)
+
+Edit the **master Google Sheet** only. Then press **Actions > Update data from the master Google Sheet > Run workflow** on GitHub, or wait for the nightly run at about 2 AM Eastern.
+
+The workflow (`.github/workflows/sync-data.yml`, script `scripts/sync_google.py`):
+1. downloads the master through a Google service account,
+2. runs `build_dashboard_data.py` (cleaning, privacy filter, capability mapping); if the build finds an error, nothing is published and GitHub emails the failure,
+3. commits `data/suppliers.json` and `tableau/*.xlsx` to main, so the HTML dashboard updates within minutes,
+4. rewrites the **published Google Sheet** (tabs `Suppliers` and `Capabilities`, public fields only). Tableau Public refreshes from it once a day, or at once with **Request update** on the viz page.
+
+If nothing changed for any supplier, the run stops without committing or publishing. The master may hold a `Capability_Map` tab; if not, `data/capability_map.xlsx` from the repo is used.
+
+Secrets (Settings > Secrets and variables > Actions): `GOOGLE_SERVICE_ACCOUNT_JSON`, `MASTER_SHEET_ID`, `PUBLISHED_SHEET_ID`.
+
+Tableau must connect to the **published** sheet, never the master: anyone viewing a Tableau Public dashboard can download its data.
