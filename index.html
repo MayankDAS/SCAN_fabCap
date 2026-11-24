@@ -554,15 +554,32 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
   header .themebtn{top:calc(50% - 17px)}
   .herologos{flex-direction:row;align-items:center;gap:0}
   .herologos img{height:38px}.herologos img.ub{height:46px}.herologos .sep{height:38px}
-  /* 12 columns: search 5 and Tableau 7 on top, fab 6 and capability groups 6 below */
+  /* 12 columns: search 4 and Tableau 8 on top, fab 6 and capability groups 6 below.
+     The Tableau panel gets the wider share and a taller row so Tableau Public
+     always has room for its desktop layout (it switches to the phone layout
+     when the frame is narrow). */
   .dash{flex:none;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));
-        grid-template-rows:max(500px,66.7vh) max(440px,50vh);
-        grid-template-rows:max(500px,66.7dvh) max(440px,50dvh);
-        grid-template-areas:"search search search search search tab tab tab tab tab tab tab"
+        grid-template-rows:max(620px,76vh) max(440px,50vh);
+        grid-template-rows:max(620px,76dvh) max(440px,50dvh);
+        grid-template-areas:"search search search search tab tab tab tab tab tab tab tab"
                             "fab fab fab fab fab fab caps caps caps caps caps caps"}
   .dash>.panel{min-height:0;overflow:hidden;padding:12px 14px;gap:10px;border-radius:16px}
   .dash .phead{flex:none;flex-wrap:nowrap}
   .dash .phead h2,.q-search .phead label{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .q-search{container-type:inline-size}
+  .q-search .hdrtools{display:flex;flex:none;align-items:center;gap:6px}
+  .q-search .ilbl{font-weight:inherit}
+  /* narrow search panel: the help button shrinks to its "?" so the title keeps its room */
+  @container (max-width:470px){
+    .q-search .ilbl{display:none}
+    .q-search .infobtn{padding:4px 5px}
+    .q-search .phead label{font-size:16px}
+    .q-search .resetbtn{padding:4px 12px;font-size:14px}
+  }
+  @container (max-width:380px){
+    .q-search .phead label{font-size:15px;gap:7px}
+    .q-search .phead label::before{width:8px;height:8px}
+  }
   .dash .howto{flex:none;max-height:40%;overflow:auto}
   .q-search .searchbar{flex:none}
   .q-search .searchhelp{max-height:none;overflow:visible}   /* show the whole help text, never clipped */
@@ -655,7 +672,7 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
 
     <section class="panel q-search" aria-labelledby="slbl">
       <div class="phead"><label id="slbl" for="dsearch">Search the dashboard</label>
-        <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="shelp"><span aria-hidden="true">?</span> How to use</button><button type="button" class="resetbtn" id="resetbtn">↺ Reset</button></div></div>
+        <div class="hdrtools"><button type="button" class="infobtn" aria-expanded="false" aria-controls="shelp" aria-label="How to use the search"><span aria-hidden="true">?</span><b class="ilbl"> How to use</b></button><button type="button" class="resetbtn" id="resetbtn">↺ Reset</button></div></div>
       <div role="search" class="searchbar">
     <p class="howto searchhelp" id="shelp" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5M12 8h.01"/></svg><span><b>How to use this:</b> type any part of a <b>company name</b> (for example Applied Materials), a <b>capability</b> (for example reverse osmosis or CNC machining) or an <b>industry sector</b> (for example Optics &amp; Photonics). Choose a result to see its details just below the search box.</span></p>
     <div class="sbox">
@@ -1451,6 +1468,8 @@ const LINK = {
                  "Industry Groups", "Industry", "Sector"],
   // Field that names a supplier tier, for clicks on the tier tiles (KPI sheets).
   tierFields: ["Tier Classification", "tier_label", "Tier Label", "Tier"],
+  // Panels narrower than this keep Tableau's phone layout; wider ones get the desktop layout.
+  phoneBelow: 520,
   sheets: [],             // worksheet to highlight in, first match wins; empty picks a map sheet
   loadTimeoutMs: 60000,   // no interactive viz by then means fall back to the standard embed
 };
@@ -1521,7 +1540,8 @@ function legacyEmbed(reason) {
   const params = [["host_url", "https%3A%2F%2Fpublic.tableau.com%2F"], ["embed_code_version", "3"],
     ["path", path], ["toolbar", "yes"], ["static_image", staticImage(path)], ["animate_transition", "yes"],
     ["display_static_image", "yes"], ["display_spinner", "yes"], ["display_overlay", "yes"],
-    ["display_count", "no"], ["language", "en-US"], ["filter", "publish=yes"]];
+    ["display_count", "no"], ["language", "en-US"], ["filter", "publish=yes"],
+    ...((host.offsetWidth || 1000) >= LINK.phoneBelow ? [["device", "desktop"]] : [])];
   for (const [n, v] of params) { const p = document.createElement("param"); p.name = n; p.value = v; obj.appendChild(p); }
   host.appendChild(obj);
   obj.style.width = "100%"; obj.style.height = (host.clientHeight || heightFor()) + "px";
@@ -1547,6 +1567,10 @@ function mount() {
   viz.toolbar = "bottom";
   viz.width = "100%";
   viz.height = "100%";            // the panel sets the size, so the dashboard follows window resizes
+  // Tableau Public picks a phone layout when the frame looks small. Ask for the
+  // desktop layout whenever the panel is wide enough to show it; real phones
+  // (panel under LINK.phoneBelow px) still get the phone layout.
+  if ((host.offsetWidth || 1000) >= LINK.phoneBelow) { viz.setAttribute("device", "desktop"); try { viz.device = "desktop"; } catch (e) {} }
   const timer = setTimeout(() => { if (!ready && !failed) { viz.remove(); legacyEmbed("the dashboard did not become interactive within " + LINK.loadTimeoutMs / 1000 + " seconds"); } }, LINK.loadTimeoutMs);
   viz.addEventListener(TableauEventType.VizLoadError, ev => {
     clearTimeout(timer); viz.remove();
