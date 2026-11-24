@@ -69,7 +69,7 @@ Clicking a tier tile in the Tableau dashboard (the KPI sheets: Tier 1, Tier 2, T
 * Names in the tier list open the company and highlight it on the map; the tier tile stays selected and a **Back to Tier N suppliers** button returns to the list.
 * Clicking the same tile again resets the details panel. Picking another tile replaces the list and clears the previous tile.
 * The tile is found by its `Tier Classification` field on any sheet that has no company field, so no Tableau change is needed. Tile labels match the page tier names (`Tier 1`, `Tier 2`, `Tier 3`, `Support Organization`).
-* The live dashboard also has a **Fab** tile; the supplier list has no Fab tier, so clicking it shows a short note instead of a list. The page's 16 Unclassified suppliers have no tile.
+* The **Fab** tile lists the fabs themselves (Tier Classification `Fab`, published as tier 5). A tile label the supplier list has no tier for shows a short note instead of a list. Unclassified suppliers have no tile.
 * Deep link: `?tier=2` or `?tier=Support%20Organization` opens the list and highlights its tile.
 * Clarity events: `tableau_tier_click` (tag `tableau_tier`), `tableau_tier_clear`.
-* Tests: `tests/tableau_link/tier.test.mjs` (33 checks).
+* Tests: `tests/tableau_link/tier.test.mjs` (33 checks; the Fab tile lists the fabs).
