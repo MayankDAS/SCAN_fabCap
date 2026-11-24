@@ -39,6 +39,12 @@ export class TableauViz extends HTMLElement {
         .concat(CFG.extraSector ? [{ [sectorCol]: CFG.extraSector, "CNT(supplier_name)": 3 }] : []);
     });
     this._sheets = CFG.noKey ? [bars] : [map, bars];
+    /* Tier tiles as on the live dashboard: one KPI sheet per tier, plus a "Fab" tile the page has no tier for */
+    if (CFG.tiers) for (const [sheet, label] of [["KPI - Tier 1", "Tier 1"], ["KPI - Tier 2", "Tier 2"], ["KPI - Tier 3", "Tier 3"], ["KPI - Support", "Support Organization"], ["KPI - Fab", "Fab"]])
+      this._sheets.push(new Worksheet(this, sheet, ["Tier Classification", "AGG(% of Total )", "AGG(Company Count)"], async () => {
+        const n = (await data()).filter(r => r.tier_label === label).length || 1;
+        return [{ "Tier Classification": label, "AGG(% of Total )": n / 155, "AGG(Company Count)": n }];
+      }));
   }
   connectedCallback() {
     if (this._init) return; this._init = true;
