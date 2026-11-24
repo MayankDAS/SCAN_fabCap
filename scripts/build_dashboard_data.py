@@ -92,14 +92,16 @@ BLOCKED_COLUMNS = [
 ]
 
 # Tier Classification text mapped to the numeric tier the page sorts and colors
-# by. 0 is the unclassified bucket, 4 the support organizations.
+# by. 0 is the unclassified bucket, 4 the support organizations, 5 the fabs
+# themselves (the chip makers the suppliers serve).
 TIER_LEVELS = {
     "tier 1": 1, "tier1": 1, "1": 1,
     "tier 2": 2, "tier2": 2, "2": 2,
     "tier 3": 3, "tier3": 3, "3": 3,
     "support organization": 4, "support": 4, "support org": 4,
+    "fab": 5, "fabs": 5, "fab operator": 5, "chip maker": 5, "chipmaker": 5,
 }
-TIER_NAMES = {0: "Unclassified", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Support Organization"}
+TIER_NAMES = {0: "Unclassified", 1: "Tier 1", 2: "Tier 2", 3: "Tier 3", 4: "Support Organization", 5: "Fab"}
 
 # The capability mapping sheet, which turns free text capability phrases into
 # the fixed keys the fab cutaway lights zones from. Produced by
@@ -287,7 +289,7 @@ def split_list(value, delimiters: str) -> list[str]:
 def parse_tier(value) -> tuple[int, str]:
     """
     Tier Classification is free text and incomplete: Tier 1/2/3, plus
-    Support Organization, plus blanks. Returns (level, label).
+    Support Organization, plus Fab, plus blanks. Returns (level, label).
     """
     cleaned = text(value)
     if not cleaned:

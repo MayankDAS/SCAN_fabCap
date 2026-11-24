@@ -4,8 +4,8 @@
 :root{
   --bg:#eef4fb; --bg2:#e2ecf8; --panel:#ffffff; --ink:#0b1e3a; --ink2:#3d5475; --muted:#566c8a; --line:#d8e4f2; --soft:#edf3fb;
   --accent:#1f6feb; --accent2:#19a7ce; --accent-soft:#e2edfd;
-  --t1:#0b3d91; --t2:#1f78d1; --t3:#17a2c8; --t4:#0f8a6a; --t0:#6b7280;
-  --t1s:#dbe5f6; --t2s:#ddeefc; --t3s:#d9f3fa; --t4s:#d7f2e9; --t0s:#e5e7eb;
+  --t1:#0b3d91; --t2:#1f78d1; --t3:#17a2c8; --t4:#0f8a6a; --t5:#9b1c4a; --t0:#6b7280;
+  --t1s:#dbe5f6; --t2s:#ddeefc; --t3s:#d9f3fa; --t4s:#d7f2e9; --t5s:#f8dde7; --t0s:#e5e7eb;
   --fab:#4b5563; --i90:#d62828; --road:#5f7fb0; --road2:#a9bcd8; --land:#dde8f5; --water:#f5f9fe; --border:#bfd0e6;
   --hero1:#0a2a66; --hero2:#1553b8; --hero3:#1aa5d6;
   --shadow:0 1px 2px rgba(11,30,58,.05),0 10px 30px -12px rgba(21,83,184,.22);
@@ -16,16 +16,16 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#06101f; --bg2:#0a1830; --panel:#0c1a2f; --ink:#e8f1fc; --ink2:#a9bfdc; --muted:#9db2cf; --line:#1b2f4d; --soft:#11233d;
   --accent:#5aa2ff; --accent2:#3fd0f0; --accent-soft:#12305a;
-  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t0:#9aa3af;
-  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t0s:#2a2f38;
+  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t5:#f07aa5; --t0:#9aa3af;
+  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t5s:#3d1324; --t0s:#2a2f38;
   --fab:#9aa3af; --i90:#ff5a5a; --road:#8fb0e0; --road2:#34507a; --land:#15284a; --water:#0a1528; --border:#2a4468;
   --hero1:#081d4a; --hero2:#0f3f93; --hero3:#1283b0;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 36px -14px rgba(0,0,0,.7); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#06101f; --bg2:#0a1830; --panel:#0c1a2f; --ink:#e8f1fc; --ink2:#a9bfdc; --muted:#9db2cf; --line:#1b2f4d; --soft:#11233d;
   --accent:#5aa2ff; --accent2:#3fd0f0; --accent-soft:#12305a;
-  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t0:#9aa3af;
-  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t0s:#2a2f38;
+  --t1:#7ea8ff; --t2:#4fa3f7; --t3:#40d0ef; --t4:#4fd4ab; --t5:#f07aa5; --t0:#9aa3af;
+  --t1s:#132a57; --t2s:#10345a; --t3s:#0c3a4c; --t4s:#0b3a2e; --t5s:#3d1324; --t0s:#2a2f38;
   --fab:#9aa3af; --i90:#ff5a5a; --road:#8fb0e0; --road2:#34507a; --land:#15284a; --water:#0a1528; --border:#2a4468;
   --hero1:#081d4a; --hero2:#0f3f93; --hero3:#1283b0;
   --shadow:0 1px 2px rgba(0,0,0,.4),0 14px 36px -14px rgba(0,0,0,.7); color-scheme:dark}
@@ -493,7 +493,8 @@ footer{font-size:14.5px}
 
 /* ===== Live data additions: five tier classes, Tableau setup note ===== */
 .d0{background:var(--t0)} .d4{background:var(--t4)}
-.tpill.t4{background:#6a3d9a} .tpill.t0{background:#5b6470}
+.tpill.t4{background:#6a3d9a} .tpill.t0{background:#5b6470} .tpill.t5{background:#9b1c4a}
+.d5{background:var(--t5)}
 .tableau-viz,tableau-viz{display:block;width:100%}
 .tabsetup{padding:22px;display:flex;flex-direction:column;gap:8px;font-size:14px;color:var(--ink2)}
 .nodata{color:var(--ink2);font-size:14.5px}
@@ -831,7 +832,7 @@ const CORRIDOR={n:"NY SMART I-Corridor Tech Hub",
 function pip(r,[x,y]){let c=false;for(let i=0,j=r.length-1;i<r.length;j=i++){const[xi,yi]=r[i],[xj,yj]=r[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c;}return c;}
 const sited=d=>d.la!=null&&d.lo!=null;
 const inCorridor=d=>sited(d)&&pip(CORRIDOR.ring,[d.lo,d.la]);
-let TIERN = {0:"Unclassified",1:"Tier 1",2:"Tier 2",3:"Tier 3",4:"Support Organization"};
+let TIERN = {0:"Unclassified",1:"Tier 1",2:"Tier 2",3:"Tier 3",4:"Support Organization",5:"Fab"};
 const state = {q:"", ref:8, corr:true, roads:true, tiers:new Set([0,1,2,3,4]), sec:null, tier:null, tsel:null, cap:null, zone:null};
 const $ = s=>document.querySelector(s);
 const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -892,15 +893,16 @@ const ZONE_HELP={
  ro:"Pushes water through fine membranes to strip out dissolved salts and minerals (reverse osmosis).",
  recyc:"Collects used water so it can be cleaned and reused.",
  pumpz:"Pumps purified water to the fab."};
-const TIERDEF={1:"Sells tools, gases, AMHS or facility systems straight to the fab",2:"Supplies subsystems and critical parts to Tier 1 makers",3:"Machining, sensors, raw materials and regional component makers",4:"Listed in the Tech Hub directory as a support organization rather than a production supplier",0:"No tier recorded yet in the master listing"};
-const TORDER=[1,2,3,4,0];
+const TIERDEF={5:"Operates a semiconductor fab: the chip maker the suppliers below serve",1:"Sells tools, gases, AMHS or facility systems straight to the fab",2:"Supplies subsystems and critical parts to Tier 1 makers",3:"Machining, sensors, raw materials and regional component makers",4:"Listed in the Tech Hub directory as a support organization rather than a production supplier",0:"No tier recorded yet in the master listing"};
+const TORDER=[5,1,2,3,4,0];
 const tiersIn=arr=>TORDER.filter(t=>arr.some(d=>d.t===t));
-const TSHORT={1:"direct to the fab",2:"subsystems and parts",3:"components and materials",4:"support organizations",0:"tier not recorded"};
+const TSHORT={5:"chip makers",1:"direct to the fab",2:"subsystems and parts",3:"components and materials",4:"support organizations",0:"tier not recorded"};
 const TSHAPE={1:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8"/></svg>',
               2:'<svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4.2"/></svg>',
               3:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .6 9.6 9.2H.4z"/></svg>',
               4:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .4 9.6 5 5 9.6 .4 5z"/></svg>',
-              0:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2"/></svg>'};
+              0:'<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2"/></svg>',
+              5:'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 .3 6.4 3.6 9.8 3.8 7.2 6 8 9.6 5 7.7 2 9.6 2.8 6 .2 3.8 3.6 3.6z"/></svg>'};
 const tpill=t=>`<span class="tpill t${t}">${TSHAPE[t]||""}${esc(TIERN[t]||"Unclassified")}</span>`;
 Object.assign(state,{sort:"dist",closed:new Set(CAP_GROUPS.map((_,i)=>i)),zopen:new Set(),openSup:new Set(),view:"cut",stmtOnly:false});
 const stmtBadge=d=>d.statement?`<a class="stmt" href="${esc(d.statement)}" target="_blank" rel="noopener" title="Open capability statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>Statement<span class="sr"> for ${esc(d.n)} (opens in a new tab)</span></a>`:"";

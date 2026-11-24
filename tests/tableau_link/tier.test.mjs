@@ -1,7 +1,7 @@
 /* End to end tests for the Tableau tier tiles -> supplier list link in index.html.
 
    Uses tableau_mock.mjs with tier tiles turned on (one KPI sheet per tier, as on
-   the live dashboard, plus a "Fab" tile the supplier list has no tier for).
+   the live dashboard, including the Fab tile).
 
    Run from the repo root:
      python3 -m http.server 8740 &
@@ -48,7 +48,7 @@ const pageCount = (page, t) => page.evaluate(t => window.SCAN.companies.filter(d
 { const { page, errors } = await open();
   const s = await page.evaluate(() => window.SCANLink.state);
   check(s.tierTargets.length === 5, "finds the five tier tiles", s.tierTargets.map(t => t.sheet).join(", "));
-  check(s.tierTargets.find(t => t.sheet === "KPI - Fab").matched.length === 0 && s.tierTargets.find(t => t.sheet === "KPI - Support").matched[0] === 4, "maps tile labels to page tiers (Support Organization to 4, Fab to none)");
+  check(s.tierTargets.find(t => t.sheet === "KPI - Fab").matched[0] === 5 && s.tierTargets.find(t => t.sheet === "KPI - Support").matched[0] === 4, "maps tile labels to page tiers (Support Organization to 4, Fab to 5)");
   check(s.targets.length === 1 && s.targets[0].sheet === "Supplier Map", "tier tiles are not mistaken for a company sheet");
   check(/tier tile/.test(await status(page)), "idle message mentions tier tiles", await status(page));
   check(errors.length === 0, "no page errors", errors.join(" | "));
@@ -104,10 +104,11 @@ const pageCount = (page, t) => page.evaluate(t => window.SCAN.companies.filter(d
   check(/Tier cleared/.test(await status(page)), "status explains the reset", await status(page));
   await page.close(); }
 
-/* 5. a tile with no matching page tier explains itself */
+/* 5. the Fab tile lists the fabs; a tile with no matching page tier explains itself */
 { const { page } = await open();
   await click(page, "KPI - Fab", ["Fab"]); await sleep(400);
-  check(/isn't a tier in the supplier list/.test(await status(page)) && (await head(page)).h === "No selection yet", "the Fab tile shows a note and leaves the panel alone", await status(page));
+  const h = await head(page), n = await pageCount(page, 5);
+  check(h.h === "Fab" && h.n === n && n > 0, `the Fab tile lists the ${n} fabs`, JSON.stringify(h));
   await page.close(); }
 
 /* 6. page to viz: ?tier= opens the list and highlights its tile; search afterwards clears the tile */
