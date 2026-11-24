@@ -52,6 +52,7 @@ DEFAULT_TABLEAU_DIR = "tableau"
 # Sheet to publish. Matching ignores case, spaces, underscores and punctuation.
 SOURCE_SHEET_ALIASES = [
     "Scraped capability statements",
+    "Scrapped capability statements",   # spelling used in the Google Sheet copy
     "Capability Statements",
     "Suppliers",
 ]
@@ -388,8 +389,25 @@ def resolve_sheet(workbook: pd.ExcelFile) -> str:
     for alias in SOURCE_SHEET_ALIASES:
         if norm(alias) in actual:
             return actual[norm(alias)]
+    # No known tab name: accept the one tab whose header row has the supplier
+    # columns, so a renamed tab does not stop the update.
+    wanted = {norm("Supplier_Name"), norm("Primary_Capability"), norm("Tier Classification")}
+    candidates = []
+    for name in workbook.sheet_names:
+        try:
+            header = {norm(c) for c in pd.read_excel(workbook, sheet_name=name, nrows=0).columns}
+        except Exception:
+            continue
+        if wanted <= header:
+            candidates.append(name)
+    if len(candidates) == 1:
+        warn(f"source tab is named '{candidates[0]}', not one of {SOURCE_SHEET_ALIASES}; "
+             f"used it because it is the only tab with the supplier columns")
+        return candidates[0]
     fail(
-        f"source sheet not found. Looked for {SOURCE_SHEET_ALIASES}. "
+        f"source sheet not found. Looked for {SOURCE_SHEET_ALIASES}"
+        + (f", and several tabs have the supplier columns: {candidates}" if candidates else "")
+        + ". "
         f"Workbook contains: {workbook.sheet_names}"
     )
 

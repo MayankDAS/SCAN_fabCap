@@ -29,8 +29,8 @@ jobs:
       MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
       PUBLISHED_SHEET_ID: ${{ secrets.PUBLISHED_SHEET_ID }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: pip install pandas openpyxl google-auth requests
       - name: Check secrets
