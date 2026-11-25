@@ -28,14 +28,19 @@ jobs:
       GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
       MASTER_SHEET_ID: ${{ secrets.MASTER_SHEET_ID }}
       PUBLISHED_SHEET_ID: ${{ secrets.PUBLISHED_SHEET_ID }}
+      SYNC_DEPLOY_KEY: ${{ secrets.SYNC_DEPLOY_KEY }}
     steps:
+      # The "Main protect" ruleset lets deploy keys bypass it, but not the
+      # built in GitHub Actions token, so the commit is pushed with a deploy key.
       - uses: actions/checkout@v5
+        with:
+          ssh-key: ${{ secrets.SYNC_DEPLOY_KEY }}
       - uses: actions/setup-python@v6
         with: { python-version: "3.12" }
       - run: pip install pandas openpyxl google-auth requests
       - name: Check secrets
         run: |
-          for s in GOOGLE_SERVICE_ACCOUNT_JSON MASTER_SHEET_ID PUBLISHED_SHEET_ID; do
+          for s in GOOGLE_SERVICE_ACCOUNT_JSON MASTER_SHEET_ID PUBLISHED_SHEET_ID SYNC_DEPLOY_KEY; do
             [ -n "${!s}" ] || { echo "Missing secret $s"; exit 1; }
           done
       - name: Build and publish

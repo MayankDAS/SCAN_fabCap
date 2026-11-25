@@ -87,6 +87,6 @@ The workflow (`.github/workflows/sync-data.yml`, script `scripts/sync_google.py`
 
 If nothing changed for any supplier, the run stops without committing or publishing. The master may hold a `Capability_Map` tab; if not, `data/capability_map.xlsx` from the repo is used.
 
-Secrets (Settings > Secrets and variables > Actions): `GOOGLE_SERVICE_ACCOUNT_JSON`, `MASTER_SHEET_ID`, `PUBLISHED_SHEET_ID`.
+Secrets (Settings > Secrets and variables > Actions): `GOOGLE_SERVICE_ACCOUNT_JSON`, `MASTER_SHEET_ID`, `PUBLISHED_SHEET_ID`, `SYNC_DEPLOY_KEY`. The last is the private half of a write deploy key (Settings > Deploy keys); the Main protect ruleset lets deploy keys bypass it, while the built in Actions token cannot be added to a personal repo's bypass list.
 
 Tableau must connect to the **published** sheet, never the master: anyone viewing a Tableau Public dashboard can download its data.
