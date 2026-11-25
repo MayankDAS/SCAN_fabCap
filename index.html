@@ -1738,6 +1738,21 @@ async function highlight(id, opts = {}) {
 async function clearTiers(except) {
   for (const tt of tierTargets) { if (tt === except) continue;
     try { await quietly(() => tt.ws.clearSelectedMarksAsync()); } catch (e) { log("clear tier failed", tt.ws.name, e); } }
+  if (!except) await setMapTier(null);
+}
+/* The map follows the chosen tier: a tier tile (alone or within a sector) filters
+   the company map to that tier, so it matches the list in the search panel.
+   Tableau's own sector action keeps filtering by sector, so the two combine. */
+let mapTier = null;
+async function setMapTier(value) {
+  const m = primary(), tt = tierTargets[0];
+  if (!m || !tt || mapTier === value) return;
+  const fType = (api && api.FilterUpdateType && api.FilterUpdateType.Replace) || "replace";
+  try {
+    if (value === null) await quietly(() => m.ws.clearFilterAsync(tt.field));
+    else await quietly(() => m.ws.applyFilterAsync(tt.field, [value], fType));
+    mapTier = value;
+  } catch (e) { log("map tier filter failed", m.ws.name, e); }
 }
 async function clearAll(message) {
   pending = null; pendingSector = null; pendingTier = null;
@@ -1792,6 +1807,7 @@ async function highlightTier(tier, opts = {}) {
   try {
     echoTier = { value: v, until: Date.now() + 3000 };
     await tile.ws.selectMarksByValueAsync([{ fieldName: tile.field, value: [v] }], api.SelectionUpdateType.Replace);
+    await setMapTier(v);
     say(`Highlighted the <b>${escH(label)}</b> tile in the dashboard.`);
   } catch (e) {
     log("tier highlight failed on", tile.ws.name, e);
@@ -1833,6 +1849,7 @@ async function onMarks(ev) {
 }
 function onTierCleared(tt) {
   track("tableau_tier_clear");
+  setMapTier(null);
   if (!window.SCAN.hasSelection) { say(IDLE_SECTORS); return; }
   const sec = window.SCAN.sector;
   if (sec) {                                                 // tier was the second filter: back to the whole sector
@@ -1857,6 +1874,7 @@ async function onTier(values, tt) {
   const t = primary();                                       // one tier at a time: drop other tiles and any company mark
   if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }
   await clearTiers(tt);
+  await setMapTier(v);
 }
 function onSectorCleared() {
   track("tableau_sector_clear");
