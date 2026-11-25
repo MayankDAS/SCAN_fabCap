@@ -141,6 +141,61 @@ const pageCount = (page, t) => page.evaluate(t => window.SCAN.companies.filter(d
   check((await mlog(page)).some(x => x.op === "clear" && x.sheet === "KPI - Tier 2") && (await head(page)).h === "No selection yet", "Reset clears the tier tiles and the panel");
   await page.close(); }
 
+/* 9. sector AND tier: a tier picked after a sector filters within that sector */
+{ const { page, errors } = await open();
+  const pick = await page.evaluate(() => { const c = {}; window.SCAN.companies.forEach(d => { const k = d.s + "|" + d.t; c[k] = (c[k] || 0) + 1; });
+    const sec = {}; window.SCAN.companies.forEach(d => sec[d.s] = (sec[d.s] || 0) + 1);
+    const [k] = Object.entries(c).filter(([k, n]) => k.endsWith("|2") && n > 1 && sec[k.split("|")[0]] > n).sort((a, b) => b[1] - a[1])[0];
+    const s = k.split("|")[0]; return { s, n: c[k], all: sec[s], tier2: window.SCAN.companies.filter(d => d.t === 2).length }; });
+  await click(page, "Sector Bars", [pick.s]); await sleep(400);
+  check((await head(page)).n === pick.all, `sector bar lists all ${pick.all} suppliers in ${pick.s}`);
+  await page.evaluate(() => { window.__mockLog.length = 0; });
+  await click(page, "KPI - Tier 2", ["Tier 2"]); await sleep(500);
+  let h = await head(page);
+  check(h.eb === "Industry sector and tier" && h.h === pick.s && h.n === pick.n, `then Tier 2 lists only the ${pick.n} Tier 2 suppliers in that sector (not all ${pick.tier2})`, JSON.stringify(h));
+  const tiers = await page.evaluate(() => [...document.querySelectorAll("#capinfo .suplist .tpill")].map(e => e.textContent.trim()));
+  check(tiers.every(t => t === "Tier 2"), "every row is Tier 2");
+  check(!(await mlog(page)).some(x => x.op === "clear" && x.sheet === "Sector Bars"), "the sector bar stays selected in the dashboard");
+  check(new RegExp(`Listing the ${pick.n} Tier 2 suppliers in`).test(await status(page)), "status names both filters", await status(page));
+  const sel = await page.evaluate(() => { const s = window.SCANExport.currentSelection(); return { kind: s.kind, n: s.items.length, link: s.link }; });
+  check(sel.kind === "Industry sector and tier" && sel.n === pick.n && /\?sector=.+&tier=2$/.test(sel.link), "PDF and email export the filtered list with both filters in the link", JSON.stringify(sel));
+  // company from the combined list, then back
+  await page.evaluate(() => document.querySelector("#capinfo .conav").click()); await sleep(400);
+  const bk = await page.$eval("#backbtn", b => b.textContent.trim()).catch(() => "");
+  check(bk.includes(`Back to Tier 2 in ${pick.s} suppliers`), "Back button names both filters", bk);
+  await page.click("#backbtn"); await sleep(400);
+  h = await head(page);
+  check(h.eb === "Industry sector and tier" && h.n === pick.n, "Back returns to the filtered list");
+  // clearing the tier tile goes back to the whole sector (wait out the quiet and echo windows after Back's own highlight)
+  await sleep(3200);
+  await click(page, "KPI - Tier 2", []); await sleep(400);
+  h = await head(page);
+  check(h.eb !== "Industry sector and tier" && h.h === pick.s && h.n === pick.all, "deselecting the tier tile lists the whole sector again", JSON.stringify(h));
+  // tier first, then sector: also combined
+  await click(page, "KPI - Tier 2", ["Tier 2"]); await sleep(1700);
+  await click(page, "Sector Bars", []); await sleep(400);
+  h = await head(page);
+  check(h.h === "Tier 2" && h.n === pick.tier2, "deselecting the sector bar lists the whole tier", JSON.stringify(h));
+  await click(page, "Sector Bars", [pick.s]); await sleep(400);
+  h = await head(page);
+  check(h.eb === "Industry sector and tier" && h.n === pick.n, "a sector picked while a tier tile is selected also filters by both");
+  // page buttons drop one filter
+  await page.click("#droptier"); await sleep(400);
+  check((await head(page)).n === pick.all, "\"Show all tiers in this sector\" drops the tier");
+  check(errors.length === 0, "no page errors", errors.join(" | "));
+  await page.close(); }
+{ const { page } = await open();
+  await click(page, "KPI - Tier 1", ["Tier 1"]); await sleep(400);
+  const n1 = await pageCount(page, 1);
+  check((await head(page)).n === n1, "with no sector selected, a tier tile still lists the whole tier");
+  await page.close(); }
+{ const s = await (async () => { const { page } = await open(); const v = await page.evaluate(() => { const d = window.SCAN.companies.find(x => x.t === 2); return { s: d.s, n: window.SCAN.companies.filter(x => x.t === 2 && x.s === d.s).length }; }); await page.close(); return v; })();
+  const { page } = await open(`?sector=${encodeURIComponent(s.s)}&tier=2`); await sleep(400);
+  const h = await head(page), lg = await mlog(page);
+  check(h.eb === "Industry sector and tier" && h.n === s.n, "?sector=&tier= opens the filtered list", JSON.stringify(h));
+  check(lg.some(x => x.op === "select" && x.sheet === "Sector Bars") && lg.some(x => x.op === "select" && x.sheet === "KPI - Tier 2") && !lg.some(x => x.op === "clear" && x.sheet === "Sector Bars" && lg.indexOf(x) > lg.findIndex(y => y.op === "select" && y.sheet === "Sector Bars")), "and highlights both the sector bar and the tier tile");
+  await page.close(); }
+
 /* 8. dashboards without tier tiles are unaffected */
 { const { page, errors } = await open("", {});
   const s = await page.evaluate(() => window.SCANLink.state);

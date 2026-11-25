@@ -631,6 +631,8 @@ header .themebtn{position:absolute;top:14px;right:16px;z-index:2}
 .xbtn[aria-busy="true"]{opacity:.65;cursor:progress}
 .xstatus{flex-basis:100%;font:500 12.5px/1.4 var(--body);color:var(--muted);min-height:0}
 .xstatus:empty{display:none}
+.ihead .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#capinfo p.empty{margin:12px 2px;color:var(--muted);font:500 14px/1.5 var(--body)}
 /* ===== Feedback pass ===== */
 .capgroup .cap:hover{background:var(--soft)}
 .sresults .sicon,.sicon.k1,.sicon.k2,.sicon.k3{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
@@ -1022,13 +1024,18 @@ function renderCapInfo(){
   const el=$("#capinfo");
   if(state.coSel!=null){
     const d=CO[state.coSel], zs=activeZones().sort((a,b)=>ZNUM[a]-ZNUM[b]);
-    const bk=state.back?`<button type="button" class="backbtn" id="backbtn"><span aria-hidden="true">←</span> Back to ${esc(state.back.tier!=null?(TIERN[state.back.tier]||"Unclassified"):state.back.sector)} suppliers</button>`:"";
+    const bk=state.back?`<button type="button" class="backbtn" id="backbtn"><span aria-hidden="true">←</span> Back to ${esc(state.back.tier!=null&&state.back.sector?`${TIERN[state.back.tier]||"Unclassified"} in ${state.back.sector}`:state.back.tier!=null?(TIERN[state.back.tier]||"Unclassified"):state.back.sector)} suppliers</button>`:"";
     el.innerHTML=bk+`<div class="ihead"><div class="eyebrow">Company</div><h3 tabindex="-1">${esc(d.n)}</h3>
       <div class="l2" style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:6px">${tpill(d.t)}<span class="loc">${esc(loc(d))}</span>${inCorridor(d)?'<span class="ctag">Corridor</span>':""}${sited(d)?`<span>${distTxt(d)} from ${esc(REFS[state.ref].s)}</span>`:""}</div>
       <p class="help">${esc(d.s)}${d.prim.length?" · "+d.prim.map(esc).join("; "):""}</p></div>
       <div class="where"><span>Fab capabilities:</span>${d.c.length?d.c.map(k=>`<button type="button" class="chip2" data-k="${k}">${esc(CAPN[k])}</button>`).join(""):`<span class="nodata">Not mapped to a fab capability, so no zone lights up.</span>`}</div>
       ${zs.length?"":"<!--"}<div class="where"><span>In the fab at:</span>${zs.map(z=>`<button type="button" class="chip2" data-z="${z}">${ZNUM[z]} · ${esc(ZONES[z].n)}</button>`).join("")}</div>${zs.length?"":"-->"}
       <div class="profile" style="margin:0">${profile(d)}</div>`;
+  } else if(state.tsel!=null&&state.sector){
+    const arr=CO.filter(d=>d.s===state.sector&&d.t===state.tsel), all=CO.filter(d=>d.s===state.sector).length, tn=TIERN[state.tsel]||"Unclassified";
+    el.innerHTML=`<div class="ihead"><div class="eyebrow">Industry sector and tier</div><h3 tabindex="-1">${esc(state.sector)}</h3><p class="help">${tpill(state.tsel)} only: ${arr.length} of the ${all} suppliers in this sector.</p>
+      <div class="chips" role="group" aria-label="Filters"><button type="button" class="chip2" id="droptier" title="Show every supplier in ${esc(state.sector)}">Show all tiers in this sector</button><button type="button" class="chip2" id="dropsector" title="Show every ${esc(tn)} supplier">Show all ${esc(tn)} suppliers</button></div></div>
+      ${arr.length?supplierBlock(arr,"s"):`<p class="empty">No ${esc(tn)} suppliers in ${esc(state.sector)}. Clear the tier in the dashboard, or use the buttons above.</p>`}`;
   } else if(state.tsel!=null){
     const arr=CO.filter(d=>d.t===state.tsel), secs=new Set(arr.map(d=>d.s)).size;
     el.innerHTML=`<div class="ihead"><div class="eyebrow">Supplier tier</div><h3 tabindex="-1">${esc(TIERN[state.tsel]||"Unclassified")}</h3><p class="help">${tpill(state.tsel)} ${esc(TIERDEF[state.tsel]||"")}.</p><p class="meta">${arr.length} suppliers across ${secs} ${secs===1?"sector":"sectors"}</p></div>
@@ -1055,7 +1062,9 @@ function renderCapInfo(){
   el.querySelectorAll(".chip2[data-k]").forEach(b=>b.onclick=()=>select(b.dataset.k,null));
   bindRows(el);
   const ss=el.querySelector("#supsort"); if(ss) ss.onchange=e=>{state.sort=e.target.value;renderCapInfo();renderZoneList();el.querySelector("#supsort").focus();};
-  const bb=el.querySelector("#backbtn"); if(bb) bb.onclick=()=>{const b=state.back; b.tier!=null?openTier(b.tier,{source:"back",scroll:b.scroll}):openSector(b.sector,{source:"back",scroll:b.scroll}); focusDetails();};
+  const dt=el.querySelector("#droptier"); if(dt) dt.onclick=()=>{openSector(state.sector,{tier:null}); focusDetails();};
+  const ds=el.querySelector("#dropsector"); if(ds) ds.onclick=()=>{openTier(state.tsel,{sector:null}); focusDetails();};
+  const bb=el.querySelector("#backbtn"); if(bb) bb.onclick=()=>{const b=state.back; b.tier!=null?openTier(b.tier,{source:"back",scroll:b.scroll,sector:b.sector||null}):openSector(b.sector,{source:"back",scroll:b.scroll,tier:null}); focusDetails();};
   const so=el.querySelector("#stmtonly"); if(so) so.onchange=e=>{state.stmtOnly=e.target.checked;renderCapInfo();renderZoneList();el.querySelector("#stmtonly").focus();};
 }
 
@@ -1143,12 +1152,12 @@ function openCompany(id,opts={}){
   if(!CO[id]) return false;
   /* Reached from a sector list (or from another company that was): offer a way back to that list. */
   const sc=$("#capinfo").scrollTop;
-  const back=state.sector?{sector:state.sector,scroll:sc}:state.tsel!=null?{tier:state.tsel,scroll:sc}:(state.coSel!=null?state.back:null);
+  const back=(state.sector||state.tsel!=null)?{sector:state.sector||null,tier:state.tsel,scroll:sc}:(state.coSel!=null?state.back:null);
   Object.assign(state,{cap:null,zone:null,coSel:id,sector:null,tsel:null,back}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
   if(FIT_MQ.matches) revealDetails();
   document.dispatchEvent(new CustomEvent("scan:company",{detail:{id,source:opts.source||"page",
-    keepSector:!!(back&&back.sector!=null&&CO[id].s===back.sector),
+    keepSector:!!(back&&back.sector&&CO[id].s===back.sector),
     keepTier:!!(back&&back.tier!=null&&CO[id].t===back.tier)}}));
   return true;
 }
@@ -1156,22 +1165,29 @@ function openCompany(id,opts={}){
    search box and by clicks on a sector in the Tableau dashboard. */
 function openSector(name,opts={}){
   if(!CO.some(d=>d.s===name)) return false;
-  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name,tsel:null,back:null}); state.openSup.clear();
+  // A tier picked in the dashboard stays on as a second filter (sector AND tier)
+  // when the sector comes from the dashboard too, or when the caller asks.
+  const tsel=opts.tier!==undefined?opts.tier:(opts.source==="tableau"&&state.tsel!=null?state.tsel:null);
+  Object.assign(state,{cap:null,zone:null,coSel:null,sector:name,tsel,back:null}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
   if(FIT_MQ.matches) revealDetails();
   if(opts.scroll!=null) $("#capinfo").scrollTop=opts.scroll;     // back to where the list was
-  document.dispatchEvent(new CustomEvent("scan:sector",{detail:{name,source:opts.source||"page"}}));
+  document.dispatchEvent(new CustomEvent("scan:sector",{detail:{name,tier:tsel,source:opts.source||"page"}}));
   return true;
 }
 /* Open one supplier tier's list in the details panel. Used by clicks on the
-   tier tiles in the Tableau dashboard and by ?tier= links. */
+   tier tiles in the Tableau dashboard and by ?tier= links. When an industry
+   sector is selected, the tier is a second filter: only that sector's
+   suppliers in that tier are listed. With no sector, the whole tier is listed. */
+function currentSector(){ return state.sector||(state.coSel!=null&&state.back&&state.back.sector)||null; }
 function openTier(t,opts={}){
   t=+t; if(!CO.some(d=>d.t===t)) return false;
-  Object.assign(state,{cap:null,zone:null,coSel:null,sector:null,tsel:t,back:null}); state.openSup.clear();
+  const sector=opts.sector!==undefined?opts.sector:currentSector();
+  Object.assign(state,{cap:null,zone:null,coSel:null,sector,tsel:t,back:null}); state.openSup.clear();
   state.view="cut"; renderCaps(); renderZones(); renderZoneList(); renderCapInfo(); renderView();
   if(FIT_MQ.matches) revealDetails();
   if(opts.scroll!=null) $("#capinfo").scrollTop=opts.scroll;
-  document.dispatchEvent(new CustomEvent("scan:tier",{detail:{tier:t,label:TIERN[t],source:opts.source||"page"}}));
+  document.dispatchEvent(new CustomEvent("scan:tier",{detail:{tier:t,label:TIERN[t],sector,source:opts.source||"page"}}));
   return true;
 }
 /* Empty the details panel, as when the dashboard's sector selection is cleared. */
@@ -1182,7 +1198,7 @@ function clearSelection(opts={}){
 }
 function focusDetails(){const h=$("#capinfo h3"); if(h) h.focus({preventScroll:true});}
 window.SCAN={openCompany,openSector,openTier,clearSelection,
-  get tier(){return state.tsel;}, get tierNames(){return TIERN;},get ready(){return CO.length>0;},get companies(){return CO;},
+  get tier(){return state.tsel;}, get sector(){return state.sector;}, get tierNames(){return TIERN;},get ready(){return CO.length>0;},get companies(){return CO;},
   get hasSelection(){return state.coSel!=null||!!state.sector||state.tsel!=null||!!state.cap||!!state.zone;},
   get sectors(){return [...new Set(CO.map(d=>d.s).filter(Boolean))];}};
 function openResult(n){
@@ -1244,6 +1260,9 @@ function currentSelection(){
     return {kind,title,about,items,total:all.length,sortLabel,filtered:kind!=="Company"&&state.stmtOnly,
       link:`${base}?${param}=${encodeURIComponent(value)}`};};
   if(state.coSel!=null){const d=CO[state.coSel]; return mk("Company",d.n,"",[d],"company",d.sid||d.n);}
+  if(state.tsel!=null&&state.sector){ const tn=TIERN[state.tsel]||"Unclassified";
+    const m=mk("Industry sector and tier",`${state.sector}, ${tn}`,"",CO.filter(d=>d.s===state.sector&&d.t===state.tsel),"sector",state.sector);
+    m.link+=`&tier=${state.tsel}`; return m; }
   if(state.tsel!=null) return mk("Supplier tier",TIERN[state.tsel]||"Unclassified",TIERDEF[state.tsel]?TIERDEF[state.tsel]+".":"",CO.filter(d=>d.t===state.tsel),"tier",state.tsel);
   if(state.sector) return mk("Industry sector",state.sector,"",CO.filter(d=>d.s===state.sector),"sector",state.sector);
   if(state.cap){const c=CAPS.find(x=>x.k===state.cap); return mk("Capability",c.n,CAP_HELP[c.k]||"",CO.filter(d=>d.c.includes(c.k)),"capability",c.k);}
@@ -1402,7 +1421,9 @@ function applyDeepLink(){
   const p=new URLSearchParams(location.search);
   const co=p.get("company"), se=p.get("sector"), ca=p.get("capability"), zo=p.get("zone"), ti=p.get("tier");
   if(co){const d=CO.find(x=>x.sid===co)||CO.find(x=>x.n.toLowerCase()===co.toLowerCase()); if(d) return openCompany(d.id,{source:"link"});}
-  if(se){const s=[...new Set(CO.map(d=>d.s))].find(x=>x.toLowerCase()===se.toLowerCase()); if(s) return openSector(s,{source:"link"});}
+  const tierNum=t=>t==null?null:(/^\d+$/.test(t)?+t:+(Object.keys(TIERN).find(k=>String(TIERN[k]).toLowerCase()===t.toLowerCase())??NaN));
+  if(se){const s=[...new Set(CO.map(d=>d.s))].find(x=>x.toLowerCase()===se.toLowerCase());
+    if(s){const n=tierNum(ti); return CO.some(d=>d.t===n)?openSector(s,{source:"link",tier:n}):openSector(s,{source:"link"});}}
   if(ti!=null){const n=/^\d+$/.test(ti)?+ti:+(Object.keys(TIERN).find(k=>String(TIERN[k]).toLowerCase()===ti.toLowerCase())??NaN); if(openTier(n,{source:"link"})) return true;}
   if(ca&&CAPS.some(c=>c.k===ca)) return select(ca,null,{noScroll:true});
   if(zo&&ZONES[zo]) return select(null,zo,{noScroll:true});
@@ -1668,8 +1689,11 @@ function link() {
   }
   say(sectorTargets.length ? IDLE_SECTORS : IDLE);
   if (pending !== null) { const p = pending; pending = null; highlight(p); }
-  if (pendingSector !== null) { const p = pendingSector; pendingSector = null; highlightSector(p); }
-  if (pendingTier !== null) { const p = pendingTier; pendingTier = null; highlightTier(p); }
+  const ps = pendingSector, pt = pendingTier; pendingSector = null; pendingTier = null;
+  (async () => {                                             // sector first, then tier, so neither clears the other
+    if (ps !== null) await highlightSector(ps, { keepTiers: pt !== null });
+    if (pt !== null) await highlightTier(pt.tier, pt.opts);
+  })();
 }
 
 function primary() {
@@ -1729,14 +1753,14 @@ async function clearAll(message) {
 }
 
 /* ---------- page to viz: sectors ---------- */
-async function highlightSector(name) {
+async function highlightSector(name, opts = {}) {
   if (failed) return;
   if (!ready || !window.SCAN || !window.SCAN.ready) { pendingSector = name; return; }
   const sp = sectorPrimary(); if (!sp) return;
   let v; for (const [val, n] of sp.toPage) if (n === name) { v = val; break; }
   const t = primary();
   if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }   // the sector replaces any company
-  await clearTiers();
+  if (!opts.keepTiers) await clearTiers();
   try {
     if (v === undefined) {
       await quietly(() => sp.ws.clearSelectedMarksAsync());
@@ -1753,16 +1777,16 @@ async function highlightSector(name) {
 }
 
 /* ---------- page to viz: tiers ---------- */
-async function highlightTier(tier) {
+async function highlightTier(tier, opts = {}) {
   if (failed) return;
-  if (!ready || !window.SCAN || !window.SCAN.ready) { pendingTier = tier; return; }
+  if (!ready || !window.SCAN || !window.SCAN.ready) { pendingTier = { tier, opts }; return; }
   if (!tierTargets.length) return;
   const label = window.SCAN.tierNames[tier] || "Unclassified";
   let tile = null, v;
   for (const tt of tierTargets) for (const [val, n] of tt.toPage) if (n === tier) { tile = tt; v = val; }
   const t = primary(), sp = sectorPrimary();
   if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }   // the tier replaces any company
-  if (sp) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
+  if (sp && !opts.keepSector) { try { await quietly(() => sp.ws.clearSelectedMarksAsync()); } catch (e) { log("clear sector failed", e); } }
   await clearTiers(tile);
   if (!tile) { say(`<b>${escH(label)}</b> has no tile in the dashboard, so nothing is highlighted there.`, "muted"); return; }
   try {
@@ -1810,6 +1834,12 @@ async function onMarks(ev) {
 function onTierCleared(tt) {
   track("tableau_tier_clear");
   if (!window.SCAN.hasSelection) { say(IDLE_SECTORS); return; }
+  const sec = window.SCAN.sector;
+  if (sec) {                                                 // tier was the second filter: back to the whole sector
+    window.SCAN.openSector(sec, { source: "tableau", tier: null });
+    say(`Tier cleared, so all suppliers in <b>${escH(sec)}</b> are listed again.`);
+    return;
+  }
   window.SCAN.clearSelection({ source: "tableau" });
   clearAll("Tier cleared in the dashboard, so the details panel was reset.");
 }
@@ -1820,8 +1850,10 @@ async function onTier(values, tt) {
   track("tableau_tier_click", { tableau_tier: v });
   if (tier === undefined) { say(`<b>${escH(v)}</b> isn't a tier in the supplier list, so there's nothing to list.`, "muted"); return; }
   window.SCAN.openTier(tier, { source: "tableau" });
-  const n = window.SCAN.companies.filter(d => d.t === tier).length;
-  say(`Listing the ${n} <b>${escH(window.SCAN.tierNames[tier])}</b> suppliers in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
+  const sec = window.SCAN.sector, tn = escH(window.SCAN.tierNames[tier]);
+  const n = window.SCAN.companies.filter(d => d.t === tier && (!sec || d.s === sec)).length;
+  say(sec ? `Listing the ${n} <b>${tn}</b> suppliers in <b>${escH(sec)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`
+          : `Listing the ${n} <b>${tn}</b> suppliers in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
   const t = primary();                                       // one tier at a time: drop other tiles and any company mark
   if (t) { try { await quietly(() => t.ws.clearSelectedMarksAsync()); } catch (e) { log("clear company failed", e); } }
   await clearTiers(tt);
@@ -1829,6 +1861,12 @@ async function onTier(values, tt) {
 function onSectorCleared() {
   track("tableau_sector_clear");
   if (!window.SCAN.hasSelection) { say(IDLE_SECTORS); return; }
+  const tier = window.SCAN.tier;
+  if (tier !== null && tier !== undefined) {                 // a tier tile is still selected: list the whole tier
+    window.SCAN.openTier(tier, { source: "tableau", sector: null });
+    say(`Sector cleared, so every <b>${escH(window.SCAN.tierNames[tier])}</b> supplier is listed.`);
+    return;
+  }
   window.SCAN.clearSelection({ source: "tableau" });
   clearAll("Sector cleared in the dashboard, so the details panel was reset.");   // also drops the company highlight on the map
 }
@@ -1840,8 +1878,10 @@ function onSector(values, st) {
   track("tableau_sector_click", { tableau_sector: v });
   if (!name) { say(`<b>${escH(v)}</b> isn't an industry sector in the supplier list, so there's nothing to list.`, "muted"); return; }
   window.SCAN.openSector(name, { source: "tableau" });
-  const n = window.SCAN.companies.filter(d => d.s === name).length;
-  say(`Listing the ${n} suppliers in <b>${escH(name)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
+  const tier = window.SCAN.tier, tn = tier != null ? escH(window.SCAN.tierNames[tier]) : "";
+  const n = window.SCAN.companies.filter(d => d.s === name && (tier == null || d.t === tier)).length;
+  say(tier != null ? `Listing the ${n} <b>${tn}</b> suppliers in <b>${escH(name)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`
+                   : `Listing the ${n} suppliers in <b>${escH(name)}</b> in the search panel. <a href="#capinfo" class="tablinkgo">Go to it</a>`);
 }
 
 /* ---------- diagnostics, only with ?scandebug=1 ---------- */
@@ -1871,8 +1911,13 @@ function debugPanel(reason) {
 
 /* ---------- wire up ---------- */
 document.addEventListener("scan:company", e => { if (e.detail && e.detail.source !== "tableau") highlight(e.detail.id, { keepSector: e.detail.keepSector, keepTier: e.detail.keepTier }); });
-document.addEventListener("scan:tier", e => { if (e.detail && e.detail.source !== "tableau") highlightTier(e.detail.tier); });
-document.addEventListener("scan:sector", e => { if (e.detail && e.detail.source !== "tableau") highlightSector(e.detail.name); });
+/* A sector AND a tier together: highlight the sector bar, then the tier tile, keeping both. */
+async function highlightBoth(sector, tier) {
+  if (sector) await highlightSector(sector, { keepTiers: tier != null });
+  if (tier != null) await highlightTier(tier, { keepSector: !!sector });
+}
+document.addEventListener("scan:tier", e => { if (e.detail && e.detail.source !== "tableau") highlightBoth(e.detail.sector, e.detail.tier); });
+document.addEventListener("scan:sector", e => { if (e.detail && e.detail.source !== "tableau") highlightBoth(e.detail.name, e.detail.tier); });
 document.addEventListener("scan:reset", () => clearAll());
 document.addEventListener("scan:dataready", link);
 window.SCANLink = { get state() { return { ready, failed, pending, pendingSector, sectorSheet: sectorPrimary() ? sectorPrimary().ws.name : null, targets: targets.map(t => ({ sheet: t.ws.name, field: t.field, values: t.values.length, matched: t.toPage ? t.toPage.size : 0 })),
