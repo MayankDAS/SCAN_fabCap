@@ -1,6 +1,7 @@
 /* Mock of the parts of the Tableau Embedding API v3 the page uses. */
 export const TableauEventType = { FirstInteractive: "firstinteractive", VizLoadError: "vizloaderror", MarkSelectionChanged: "markselectionchanged" };
 export const SelectionUpdateType = { Replace: "select-replace", Add: "select-add", Remove: "select-remove" };
+export const FilterUpdateType = { All: "all", Replace: "replace", Add: "add", Remove: "remove" };
 const CFG = window.__mockCfg || {};
 const LOG = (window.__mockLog = window.__mockLog || []);
 let SUP = null;
@@ -22,6 +23,8 @@ class Worksheet {
     setTimeout(() => this.viz._fire(this), 40);       // Tableau raises the event for programmatic selections too
   }
   async clearSelectedMarksAsync() { LOG.push({ op: "clear", sheet: this.name }); this.sel = []; setTimeout(() => this.viz._fire(this), 40); }
+  async applyFilterAsync(field, values, type) { LOG.push({ op: "filter", sheet: this.name, field, value: values, type }); this.filters = { ...(this.filters || {}), [field]: values }; return field; }
+  async clearFilterAsync(field) { LOG.push({ op: "unfilter", sheet: this.name, field }); if (this.filters) delete this.filters[field]; return field; }
 }
 
 export class TableauViz extends HTMLElement {

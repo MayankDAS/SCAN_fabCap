@@ -71,8 +71,9 @@ Clicking a tier tile in the Tableau dashboard (the KPI sheets: Tier 1, Tier 2, T
 * The tile is found by its `Tier Classification` field on any sheet that has no company field, so no Tableau change is needed. Tile labels match the page tier names (`Tier 1`, `Tier 2`, `Tier 3`, `Support Organization`).
 * The **Fab** tile lists the fabs themselves (Tier Classification `Fab`, published as tier 5). A tile label the supplier list has no tier for shows a short note instead of a list. Unclassified suppliers have no tile.
 * Deep link: `?tier=2` or `?tier=Support%20Organization` opens the list and highlights its tile.
+* **Sector AND tier:** when an industry sector is selected (in the dashboard, or via `?sector=`), a tier tile filters within it: only that sector's suppliers in that tier are listed. Picking a sector while a tier tile is selected works the same way. Deselecting the tier goes back to the whole sector; deselecting the sector goes back to the whole tier. With no sector selected, a tier tile lists the whole tier. Buttons in the panel drop either filter. Deep link: `?sector=Semiconductor&tier=2`. The company map follows: a selected tier filters the map (on `Tier Classification`) on top of Tableau's own sector filter, and the filter is removed when the tier is cleared, on Reset, or when a company outside the tier is picked.
 * Clarity events: `tableau_tier_click` (tag `tableau_tier`), `tableau_tier_clear`.
-* Tests: `tests/tableau_link/tier.test.mjs` (33 checks; the Fab tile lists the fabs).
+* Tests: `tests/tableau_link/tier.test.mjs` (55 checks, including sector AND tier and the map filter).
 
 # One step data update (Google Sheet)
 
